@@ -19,10 +19,17 @@ server.listen(3000, () => {
 });
 
 io.on('connection', (socket) => {
-    console.log('新用户连接');
+    console.log("新用户连接")
+
     socket.on("create_room", (data) => {
         let result = room.create_room(data.room_number)
         socket.emit("create_room", result)
+    })
+
+    socket.on("join_room", (data) => {
+        let result = room.join_room(data.room_number)
+        // 广播所有人，且得到当前room的玩家信息
+        socket.emit("join_room", result)
     })
 
 });
