@@ -10,7 +10,7 @@ class Player{
     select_friend_card(){
         let card_count = {}
         for (let card of this.cards){
-            card_count[card] = card_count[card] || 0 + 1
+            card_count[card] = (card_count[card] || 0) + 1
         }
         let unique_cards = []
         for (let card in card_count) {
