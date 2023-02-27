@@ -1,10 +1,9 @@
-const min    = 100000;                            //最小值
-const max    = 999999;                            //最大值
-const range  = max - min;                         //取值范围差
-
-exports.geneRoomNumber = () => {
-    const random = Math.random();                     //小于1的随机数
-    return min + Math.round(random * range);  //最小数加随机数*范围差
+exports.geneRoomNumber = (size=6) => {
+    let room_number = ''
+    for(let i = 0; i < size; i++) {
+        room_number += Math.floor(Math.random() * 10) + ''
+    }
+    return room_number
 }
 
 exports.shuffle = (array) => {

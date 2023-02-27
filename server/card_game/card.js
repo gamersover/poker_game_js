@@ -30,6 +30,12 @@ const CardsType = {
     ZHADAN: 6
 }
 
+const OutState = {
+    PASS: 1,
+    NO_CARDS: 2,
+    VALID: 3
+}
+
 
 class CardsInfo {
     constructor(type, rank = null, cards_len = null, is_wangzha = false) {
@@ -110,7 +116,7 @@ function get_cards_info(cards) {
     }
 
     if (cards_len === 2 && first_card_name === get_card_name(cards[1])) {
-        if (SPECIAL_CARDS.includes(first_card_name)) {
+        if (SPECIAL_CARDS.has(first_card_name)) {
             return new CardsInfo(CardsType.ZHADAN, first_card_rank, cards_len, true)
         }
         else {
@@ -126,7 +132,7 @@ function get_cards_info(cards) {
         return new CardsInfo(CardsType.ZHADAN, first_card_rank, cards_len);
     }
 
-    if (cards_len == 4 && cards.every(card => SPECIAL_CARDS.includes(get_card_name(card)))) {
+    if (cards_len == 4 && cards.every(card => SPECIAL_CARDS.has(get_card_name(card)))) {
         return new CardsInfo(CardsType.ZHADAN, first_card_rank, cards_len, true);
     }
 
@@ -162,6 +168,7 @@ function get_cards_info(cards) {
     }
     return new CardsInfo(CardsType.NOT_VALID)
 }
+
 
 function get_cards_value(raw_cards) {
     // 判断出牌（炸弹）的赏钱
@@ -215,5 +222,6 @@ module.exports = {
     get_cards_value,
     get_card_name,
     get_card_rank,
-    get_cards_info
+    get_cards_info,
+    OutState
 }

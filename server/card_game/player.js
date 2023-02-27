@@ -1,11 +1,5 @@
 const {get_cards_info, NORMAL_CARDS, SPECIAL_CARDS, get_card_rank, CARDS_RANK} = require('./card')
 
-const OutState = {
-    PASS: 1,
-    NO_CARDS: 2,
-    VALID: 3
-}
-
 
 class Player{
     constructor(cards, is_robot=false){
@@ -15,7 +9,7 @@ class Player{
 
     select_friend_card(){
         let card_count = {}
-        for (let card in this.cards){
+        for (let card of this.cards){
             card_count[card] = card_count[card] || 0 + 1
         }
         let unique_cards = []
@@ -33,6 +27,5 @@ class Player{
 }
 
 module.exports = {
-    OutState,
     Player
 }
