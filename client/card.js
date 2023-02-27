@@ -224,9 +224,11 @@ function is_valid_out_cards(raw_out_cards, is_pass, game_state, cards){
     }
     let cards_info = get_cards_info(final_cards)
     if (cards_info.type === CardsType.NOT_VALID || !cards_info.is_bigger(game_state.last_valid_cards_info)){
+        // TODO: 何种不符合规则分开说明？
         return {status: 0, msg: `${raw_out_cards} 不符合规则`}
     }
     else{
+        // TODO：有王替换其他牌的时候，可以按照替换后的牌排序raw_cards，可视化时更清楚
         return {
             status: 1,
             msg: `出牌有效`,

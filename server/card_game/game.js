@@ -123,7 +123,6 @@ class Game{
 
 
     step(curr_player_id, cards_info, all_cards, out_state){
-        // TODO: 循环判断，直到找到有手牌的用户，作为下一个curr_player_id
         if (out_state === OutState.VALID){
             this.all_players[curr_player_id].cards = all_cards
             this.game_state.last_valid_cards_info = cards_info
@@ -132,8 +131,34 @@ class Game{
         else if (out_state == OutState.NO_CARDS) {
             this.winners_order.push(curr_player_id)
         }
-        this.game_state.curr_player_id = (this.game_state.curr_player_id + 1) % NUM_PLAYERS
-        this.game_state.is_start = (this.game_state.last_valid_player_id === curr_player_id)
+
+        if (this.winners_order.length == NUM_PLAYERS - 1){
+            return {
+                status: 0,
+                msg: "游戏结束",
+                winners_order: this.winners_order
+            }
+        }
+        else {
+            let player_id = (this.game_state.curr_player_id + 1) % NUM_PLAYERS
+            while (this.all_players[player_id].cards.length == 0) {
+                player_id = (player_id + 1) % NUM_PLAYERS
+            }
+            this.game_state.curr_player_id = player_id
+            this.game_state.is_start = (this.game_state.last_valid_player_id === player_id)
+            const is_friend = (out_state == OutState.NO_CARDS) && (this.friend_map[player_id] === this.game_state.last_valid_player_id)
+            // 如果回合结束还是自己 或者 朋友牌已出，当一方出完且下个用户是朋友时重置
+            // TODO: 是对方的朋友牌出了才可以，没有朋友牌的一对可以互保吗？
+            if (this.game_state.is_start || is_friend) {
+                this.game_state.last_valid_cards_info = null
+                this.game_state.last_valid_player_id = null
+            }
+
+            return {
+                status: 1,
+                msg: "游戏进行中"
+            }
+        }
     }
 
 }

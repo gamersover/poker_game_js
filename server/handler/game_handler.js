@@ -27,8 +27,8 @@ function init_game(room_number) {
 }
 
 function game_step(room_number, curr_player_id, cards_info, all_cards, out_state){
-    room_data[room_number].game.step(curr_player_id, cards_info, all_cards, out_state)
-    return {status: 1, msg: "游戏进行中"}
+    const result = room_data[room_number].game.step(curr_player_id, cards_info, all_cards, out_state)
+    return result
 }
 
 exports.init_game = init_game

@@ -113,6 +113,12 @@ io.on('connection', (socket) => {
                 is_start: room_data[data.room_number].game.game_state.is_start
             })
         }
+        else if (result.status == 0) {
+            // TODO: 游戏结束处理
+            io.sockets.emit("game_over", {
+
+            })
+        }
     })
 
 });
