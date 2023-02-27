@@ -18,25 +18,25 @@
 <div id="curr_user">
     名称：<span></span> &nbsp;&nbsp; 状态：<span></span>
     <br />
-    手牌：<p></p>
+    手牌：<span></span>
 </div>
 
 <div id="next_user">
     名称：<span></span> &nbsp;&nbsp; 状态：<span></span>
     <br />
-    手牌：<p></p>
+    手牌：<span></span>
 </div>
 
 <div id="nnext_user">
     名称：<span></span> &nbsp;&nbsp; 状态：<span></span>
     <br />
-    手牌：<p></p>
+    手牌：<span></span>
 </div>
 
 <div id="nnnext_user">
     名称：<span></span> &nbsp;&nbsp; 状态：<span></span>
     <br />
-    手牌：<p></p>
+    手牌：<span></span>
 </div>
 
 
@@ -51,7 +51,8 @@
 
 
 <div id="game">
-    <input id="out_cards" placeholder="请出牌"></input>
+    <input id="out_cards" placeholder="请出牌" size="50"></input>
+    <br/>
     <button id="game_step" , onclick="game_step()">出牌</button>
     <button id="pass" onclick="game_pass()">跳过</button>
 </div>
@@ -190,8 +191,8 @@
         })
 
         socket.on("game_start", (data) => {
-            cards_item = document.getElementById("curr_user").getElementsByTagName("p")[0]
-            cards_item.innerText = data.all_cards.toString()
+            cards_item = document.getElementById("curr_user").getElementsByTagName("span")[2]
+            cards_item.innerText = data.all_cards.join(" ")
             document.getElementById("game_init").innerText = `朋友牌：${data.friend_card}，首位出牌用户：${data.first_player_name}`
             document.getElementById("curr_player").innerText = data.first_player_name
 
@@ -216,8 +217,8 @@
             user_data.curr_player_name = data.curr_player_name
             if (data.status === 1) {
                 document.getElementById("last_raw_cards").innerText = data.last_valid_cards.toString()
-                document.getElementById("curr_player").innerText = data.curr_player_name
             }
+            document.getElementById("curr_player").innerText = data.curr_player_name
         })
     }
 
@@ -225,6 +226,7 @@
         if (user_data.curr_player_name === user_data.user_name) {
             var raw_out_cards = document.getElementById("out_cards").value
             var result = is_valid_out_cards(raw_out_cards, false, user_data.game_state, user_data.all_cards)
+            console.log(result)
             if (result.status === -1) {
                 document.getElementById("game_msg").innerText = "无法跳过，请出牌"
                 alert("无法跳过，请出牌")
@@ -238,8 +240,9 @@
                 for (let card of result.raw_cards) {
                     user_data.all_cards.splice(user_data.all_cards.indexOf(card), 1)
                 }
-                cards_item = document.getElementById("curr_user").getElementsByTagName("p")[0]
-                cards_item.innerText = user_data.all_cards.toString()
+                cards_item = document.getElementById("curr_user").getElementsByTagName("span")[2]
+                cards_item.innerText = user_data.all_cards.join(" ")
+                // TODO: 出牌成功后清空input out_cards
                 socket.emit("game_step", {
                     room_number: user_data.room_number,
                     raw_out_cards: raw_out_cards,
@@ -270,6 +273,8 @@
             var result = is_valid_out_cards(null, true, user_data.game_state, user_data.all_cards)
             if (result.status === 2) {
                 socket.emit("game_step", {
+                    room_number: user_data.room_number,
+                    curr_player_id: user_data.curr_player_id
                 })
             }
             else if(result.status === -1){
