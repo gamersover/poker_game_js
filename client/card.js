@@ -68,7 +68,12 @@ class CardsInfo {
                 }
             }
             else {
-                return (this.cards_len, this.rank) > (other_cards_info.cards_len, other_cards_info.rank)
+                if (this.cards_len < other_cards_info.cards_len) {
+                    return false
+                }
+                else{
+                    return (this.cards_len > other_cards_info.cards_len) || (this.rank > other_cards_info.rank)
+                }
             }
         }
         else if (other_cards_info.type != CardsType.ZHADAN && this.type == CardsType.ZHADAN) {
@@ -230,7 +235,7 @@ function is_valid_out_cards(raw_out_cards, is_pass, game_state, cards){
         return {status: 0, msg: `${raw_out_cards} 比上家牌 ${game_state.last_valid_cards_info} 小`}
     }
     else{
-        // TODO：有王替换其他牌的时候，可以按照替换后的牌排序raw_cards，可视化时更清楚
+        // TODO 有王替换其他牌的时候，可以按照替换后的牌排序raw_cards，可视化时更清楚
         return {
             status: 1,
             msg: `出牌有效`,
