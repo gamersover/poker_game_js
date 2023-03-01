@@ -179,13 +179,13 @@ function get_cards_info(cards) {
     return new CardsInfo(CardsType.NOT_VALID)
 }
 
-function is_valid_out_cards(raw_out_cards, is_pass, game_state, cards){
+function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_start, cards){
     if (cards.length == 0){
         // TODO: 客户端不需要再判断是否有手牌，服务端保证了
         return { status: 3, msg: "无手牌" }
     }
     if (is_pass) {
-        if (game_state.is_start){
+        if (is_start){
             return { status: -1, msg: "你是该回合首位出牌玩家，无法跳过" }
         }
         else{
@@ -231,8 +231,8 @@ function is_valid_out_cards(raw_out_cards, is_pass, game_state, cards){
     if (cards_info.type === CardsType.NOT_VALID){
         return {status: 0, msg: `${raw_out_cards} 不符合规则`}
     }
-    else if(!cards_info.is_bigger(game_state.last_valid_cards_info)){
-        return {status: 0, msg: `${raw_out_cards} 比上家牌 ${game_state.last_valid_cards_info} 小`}
+    else if(!cards_info.is_bigger(last_valid_cards_info)){
+        return {status: 0, msg: `${raw_out_cards} 比上家牌 ${last_valid_cards_info} 小`}
     }
     else{
         // TODO 有王替换其他牌的时候，可以按照替换后的牌排序raw_cards，可视化时更清楚

@@ -2,7 +2,7 @@ const room_data = require('../data/room_data')
 const utils = require('../utils.js')
 
 
-function create_room(room_number, user_name, socket_id) {
+function create_room(room_number, player_name, socket_id) {
     if (!room_number) {
         room_number = utils.geneRoomNumber()
         while (room_data[room_number]){
@@ -13,19 +13,19 @@ function create_room(room_number, user_name, socket_id) {
             room_host_id: player_id,
             players_info: {},
             prepared_cnt: 0,
-            all_players_name: [user_name]
+            all_players_name: [player_name]
         }
 
         room_data[room_number].players_info[player_id] = {
             state: 0,
-            player_name: user_name,
+            player_name: player_name,
             socket_id: socket_id,
         }
         return {
             status: 1,
             msg: `创建房间成功`,
             room_number: room_number,
-            player_name: user_name,
+            player_name: player_name,
             player_id: player_id,
             players_info: room_data[room_number].players_info
         }
@@ -36,7 +36,7 @@ function create_room(room_number, user_name, socket_id) {
 }
 
 
-function join_room(room_number, user_name, socket_id){
+function join_room(room_number, player_name, socket_id){
     if (!room_data[room_number]) {
         return {status: 0, msg: "房间未创建，无法加入"}
     }
@@ -45,53 +45,53 @@ function join_room(room_number, user_name, socket_id){
     }
 
     let n = 1
-    let new_user_name = user_name
-    while (room_data[room_number].all_players_name.includes(new_user_name)){
-        new_user_name = user_name + n
+    let new_player_name = player_name
+    while (room_data[room_number].all_players_name.includes(new_player_name)){
+        new_player_name = player_name + n
         n++
     }
-    user_name = new_user_name
+    player_name = new_player_name
 
     let player_id = 1
     for (; player_id < 4; player_id++){
         if (!room_data[room_number].players_info[player_id]){
             room_data[room_number].players_info[player_id] = {
                 state: 0,
-                player_name: user_name,
+                player_name: player_name,
                 socket_id: socket_id,
             }
-            room_data[room_number].all_players_name.push(user_name)
+            room_data[room_number].all_players_name.push(player_name)
             break
         }
     }
 
     return {
         status: 1,
-        msg: `玩家${user_name}进入房间${room_number}`,
+        msg: `玩家${player_name}进入房间${room_number}`,
         room_number: room_number,
-        player_name: user_name,
+        player_name: player_name,
         player_id: player_id,
         players_info: room_data[room_number].players_info
     }
 }
 
-function prepare_start(room_number, user_name, player_id) {
+function prepare_start(room_number, player_name, player_id) {
     if (!room_data[room_number]){
         return {
             status: 0,
             msg: `房间${room_number}不存在`
         }
     }
-    else if (!room_data[room_number].all_players_name.includes(user_name)){
+    else if (!room_data[room_number].all_players_name.includes(player_name)){
         return {
             status: 0,
-            msg: `用户${user_name}不在房间${room_number}内`
+            msg: `用户${player_name}不在房间${room_number}内`
         }
     }
     else if (room_data[room_number].players_info[player_id].state == 1){
         return {
             status: 0,
-            msg: `用户${user_name}已在房间${room_number}准备`
+            msg: `用户${player_name}已在房间${room_number}准备`
         }
     }
     else {
@@ -99,9 +99,9 @@ function prepare_start(room_number, user_name, player_id) {
         room_data[room_number].prepared_cnt += 1
         return {
             status: 1,
-            msg: `玩家${user_name}已准备，${room_data[room_number].prepared_cnt} / 4`,
-            room_number: room_number,
-            player_name: user_name,
+            msg: `玩家${player_name}已准备，${room_data[room_number].prepared_cnt} / 4`,
+            // room_number: room_number,
+            // player_name: player_name,
             player_id: player_id,
             players_info: room_data[room_number].players_info
         }

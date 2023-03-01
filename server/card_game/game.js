@@ -60,15 +60,6 @@ class Game {
         this.init(null)
     }
 
-    init_game_state() {
-        this.game_state = {
-            curr_player_id: this.first_player_id,
-            last_valid_player_id: this.first_player_id,
-            last_valid_cards_info: null,
-            is_start: true        // 是否为首次出牌
-        }
-    }
-
     init(last_winner) {
         this.players_score = [0, 0, 0, 0]   // 当前局得分
         this.winners_order = []
@@ -79,14 +70,13 @@ class Game {
         // TODO 游戏总局数也要广播所有用户
         this.num_rounds += 1
 
-        console.log(`游戏开始，当前游玩次数：${this.num_rounds}`)
-
         // 发牌
         this.deal(last_winner)
 
         this.player_value_calculator = Array(NUM_PLAYERS).fill().map((_, i) => new ValueCalculator(this.all_players[i].cards));
 
-        this.init_game_state()
+        this.last_valid_player_id = this.first_player_id
+        this.last_valid_cards_info = null
     }
 
     get_first_player(last_winner) {
@@ -195,8 +185,8 @@ class Game {
         let show_value_cards = null
         if (out_state === OutState.VALID) {
             this.all_players[curr_player_id].cards = all_cards
-            this.game_state.last_valid_cards_info = cards_info
-            this.game_state.last_valid_player_id = curr_player_id
+            this.last_valid_cards_info = cards_info
+            this.last_valid_player_id = curr_player_id
             this.player_value_calculator[curr_player_id].update(raw_cards, cards_value)
 
             if (all_cards.length === 0) {
@@ -233,28 +223,30 @@ class Game {
             }
         }
         else {
-            let player_id = (this.game_state.curr_player_id + 1) % NUM_PLAYERS
-            while (this.all_players[player_id].cards.length == 0) {
-                player_id = (player_id + 1) % NUM_PLAYERS
+            let next_player_id = (curr_player_id + 1) % NUM_PLAYERS
+            while (this.all_players[next_player_id].cards.length == 0) {
+                next_player_id = (next_player_id + 1) % NUM_PLAYERS
             }
-            this.game_state.curr_player_id = player_id
             // TODO: 当上家出完手牌后的逻辑有点不懂
             // 上家出完后，有两种情况：1. 朋友牌未出 2. 朋友牌已出
-            // 如果情况为1那么正常出牌（但是周期变为3了），3轮还是没有人出牌，则重置，所以is_start复制不是用id相等，而是用连续pass的次数除以周期
-            // 如果为情况2，那么必须别人要不起的时候，才能保朋友
+            // 如果情况为1那么正常出牌（但是周期变为3了），3轮还是没有人出牌，则重置，所以is_start不是用id相等，而是用连续pass的次数除以周期
+            // 如果为情况2，那么必须别人要不起的时候，才能保朋友?
             // this.game_state.is_start = (this.game_state.last_valid_player_id === player_id)
-            this.game_state.is_start = (this.continue_pass_cnts + 1) === this.remain_cnts
-            const is_friend = (out_state == OutState.NO_CARDS) && (this.friend_map[player_id] === this.game_state.last_valid_player_id)
+            let is_start = (this.continue_pass_cnts + 1) === this.remain_cnts
+            const is_friend = (out_state == OutState.NO_CARDS) && (this.friend_map[next_player_id] === this.game_state.last_valid_player_id)
             // 如果回合结束还是自己 或者 朋友牌已出，当一方出完且下个用户是朋友时重置
             // TODO: 是对方的朋友牌出了才可以，没有朋友牌的一对可以互保吗？
-            if (this.game_state.is_start || is_friend) {
-                this.game_state.last_valid_cards_info = null
-                this.game_state.last_valid_player_id = null
+            is_start = is_start || is_friend
+            if (is_start) {
+                this.last_valid_cards_info = null
+                this.last_valid_player_id = null
             }
 
             let resp = {
                 status: 1,
                 msg: "游戏进行中",
+                is_start: is_start,
+                next_player_id: next_player_id,
                 value_cards: show_value_cards
             }
             return resp
