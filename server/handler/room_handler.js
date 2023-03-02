@@ -3,7 +3,7 @@ const utils = require('../utils.js')
 
 
 function create_room(room_number, player_name, socket_id) {
-    if (!room_number) {
+    if (room_number === null) {
         room_number = utils.geneRoomNumber()
         while (room_data[room_number]){
             room_number = utils.geneRoomNumber()

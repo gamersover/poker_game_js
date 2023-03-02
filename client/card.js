@@ -53,11 +53,6 @@ class CardsInfo {
         if (!other_cards_info) {
             return true
         }
-        // console.log("debug", this.type, other_cards_info.type)
-        // console.log("debug", this.type === other_cards_info.type)
-        // console.log("debug", this.cards_len, other_cards_info.cards_len)
-        // console.log("debug", this.rank, other_cards_info.rank)
-        // console.log("debug", [this.cards_len, this.rank] > [other_cards_info.cards_len, other_cards_info.rank])
         if (this.type === other_cards_info.type) {
             if (this.type !== CardsType.ZHADAN) {
                 if (this.cards_len === other_cards_info.cards_len) {
@@ -151,7 +146,6 @@ function get_cards_info(cards) {
             return new CardsInfo(CardsType.NOT_VALID);
         }
 
-        cards = cards.sort((a, b) => get_card_rank(a) - get_card_rank(b));
         let step;
         if (first_card_name != get_card_name(cards[1])) {
             step = 1;
@@ -179,11 +173,21 @@ function get_cards_info(cards) {
     return new CardsInfo(CardsType.NOT_VALID)
 }
 
+function rank_raw_cards(raw_out_cards){
+    let out_cards = raw_out_cards.split(" ")
+
+    out_cards.sort(
+        (a, b) => {
+            return get_card_rank(a.split("->").slice(-1)[0]) - get_card_rank(b.split("->").slice(-1)[0])
+        }
+    )
+    return out_cards
+}
+
 function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_start, cards){
-    if (cards.length == 0){
-        // TODO: 客户端不需要再判断是否有手牌，服务端保证了
-        return { status: 3, msg: "无手牌" }
-    }
+    // if (cards.length == 0){
+    //     return { status: 3, msg: "无手牌" }
+    // }
     if (is_pass) {
         if (is_start){
             return { status: -1, msg: "你是该回合首位出牌玩家，无法跳过" }
@@ -193,13 +197,14 @@ function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_st
         }
     }
 
-    let out_cards = raw_out_cards.split(" ")
+    out_cards = rank_raw_cards(raw_out_cards)
+
     let raw_cards = []
     let final_cards = []
     for (let card of out_cards) {
         let raw_card = card.split('->')[0]
         if (!cards.includes(raw_card)){
-            return {status: 0, msg: `${raw_cards} 不在你的手牌中`}
+            return {status: 0, msg: `${raw_card} 不在你的手牌中`}
         }
         else{
             raw_cards.push(raw_card)
@@ -218,7 +223,7 @@ function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_st
                     return {status: 0, msg: `${card} 转换牌有误`}
                 }
                 else{
-                    final_card += '_' + CARDS_RANK[final_card]
+                    // final_card += '_' + CARDS_RANK[final_card]
                     final_cards.push(final_card)
                 }
             }
@@ -226,16 +231,13 @@ function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_st
     }
     let cards_info = get_cards_info(final_cards)
     let cards_value = get_cards_value(raw_cards)
-    // console.log("debug cards_info", cards_info)
-    // console.log("debug last cards info", game_state.last_valid_cards_info)
     if (cards_info.type === CardsType.NOT_VALID){
         return {status: 0, msg: `${raw_out_cards} 不符合规则`}
     }
     else if(!cards_info.is_bigger(last_valid_cards_info)){
-        return {status: 0, msg: `${raw_out_cards} 比上家牌 ${last_valid_cards_info} 小`}
+        return {status: 0, msg: `${raw_out_cards} 比上家牌小`}
     }
     else{
-        // TODO 有王替换其他牌的时候，可以按照替换后的牌排序raw_cards，可视化时更清楚
         return {
             status: 1,
             msg: `出牌有效`,

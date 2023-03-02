@@ -77,8 +77,8 @@ io.on('connection', (socket) => {
                                 all_cards: game_data.all_players[i].cards,
                                 friend_card: game_data.friend_card,
                                 first_player_name: game_data.first_player_name,
-                                curr_player_name: game_data.first_player_name,
-                                curr_player_id: game_data.first_player_id
+                                first_player_id: game_data.first_player_id,
+                                num_rounds: game_data.num_rounds
                             })
                     }
                     logger.info(`房间${socket.room_number}：当前出牌用户${game_data.first_player_name}`)
@@ -102,18 +102,23 @@ io.on('connection', (socket) => {
         )
         let game = room_data[socket.room_number].game
         if (result.status === 1) {
+            let num_cards = game.all_players[socket.player_id].cards.length
+            num_cards = num_cards > 5 ? null : num_cards
             const next_player_id = result.next_player_id
             const next_player_name = room_data[socket.room_number].players_info[next_player_id].player_name
             if (data.out_state === OutState.VALID) {
                 // 游戏出牌状态发给所有用户
-                // TODO: 如果手牌少于6张，也要广播所有用户
+                // 如果手牌少于等于5张，广播所有用户
                 io.to(socket.room_number).emit("game_step_global", {
                     status: 1,
                     last_valid_cards: data.raw_out_cards,
                     last_player_id: socket.player_id,
+                    last_player_num_cards: num_cards,
                     curr_player_id: next_player_id,
                     curr_player_name: next_player_name,
-                    value_cards: result.value_cards || null
+                    value_cards: result.value_cards || null,
+                    has_friend_card: data.has_friend_card,
+                    rank: result.rank
                 })
             }
             else {
@@ -121,6 +126,7 @@ io.on('connection', (socket) => {
                 io.to(socket.room_number).emit("game_step_global", {
                     status: 2,
                     last_player_id: socket.player_id,
+                    last_player_num_cards: num_cards,
                     curr_player_id: next_player_id,
                     curr_player_name: next_player_name
                 })
@@ -128,18 +134,18 @@ io.on('connection', (socket) => {
             logger.info(`房间${socket.room_number}： 当前出牌用户${next_player_name}`)
             io.to(room_data[socket.room_number].players_info[next_player_id].socket_id).emit("game_step", {
                 last_valid_cards_info: game.last_valid_cards_info,
-                is_start: result.is_start
+                is_start: game.is_start
             })
         }
         else if (result.status == 0) {
-            let winner_order = []
-            game.winner_order.forEach((id) => {
-                winner_order.push(room_data[socket.room_number].players_info[id].player_name)
+            let winners_order = []
+            game.winners_order.forEach((id) => {
+                winners_order.push(room_data[socket.room_number].players_info[id].player_name)
             })
             let game_result = []
-            for(let i = 0; i < game.winner_order.length; i++) {
+            for(let i = 0; i < winners_order.length; i++) {
                 game_result.push({
-                    winner_order: winner_order,
+                    winners_order: winners_order,
                     value: result.players_value[i],   // 讨赏值
                     normal_score: result.normal_score[i], // 关双关单
                     final_score: game.players_score[i], // 最终得分
@@ -149,7 +155,7 @@ io.on('connection', (socket) => {
 
             io.to(socket.room_number).emit("game_over_global", {
                 status : 1,
-                winner_order: game.winner_order,
+                winners_order: winners_order,
                 game_result: game_result
             })
         }

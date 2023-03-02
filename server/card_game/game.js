@@ -61,13 +61,10 @@ class Game {
     }
 
     init(last_winner) {
-        this.players_score = [0, 0, 0, 0]   // 当前局得分
+        this.players_score = Array(NUM_PLAYERS).fill(0)   // 当前局得分
         this.winners_order = []
         this.first_player_id = -1
-        this.remain_cnts = 4        // 剩下用户数
-        this.continue_pass_cnts = 0 // 连着的pass个数
 
-        // TODO 游戏总局数也要广播所有用户
         this.num_rounds += 1
 
         // 发牌
@@ -77,10 +74,12 @@ class Game {
 
         this.last_valid_player_id = this.first_player_id
         this.last_valid_cards_info = null
+        this.is_start = true
+        this.continue_pass_cnts = 0
     }
 
     get_first_player(last_winner) {
-        if (!last_winner) {
+        if (last_winner === null) {
             this.first_player_id = Math.floor(Math.random() * NUM_PLAYERS);
         } else {
             this.first_player_id = last_winner;
@@ -88,7 +87,7 @@ class Game {
     }
 
     random_split_cards() {
-        this.pokers = shuffle(this.pokers)
+        // this.pokers = shuffle(this.pokers)
         const batch_size = this.pokers.length / NUM_PLAYERS
         for (let i = 0; i < NUM_PLAYERS; i++) {
             this.all_players.push(
@@ -100,17 +99,19 @@ class Game {
     get_friend_info() {
         this.friend_card = this.all_players[this.first_player_id].select_friend_card()
         this.friend_map = {}
-        this.friend_map[this.first_player_id] = 1
 
         let other_id1 = null
         let other_id2 = null
         for (let i = 0; i < NUM_PLAYERS; i++) {
-            if (i != this.first_player_id && this.all_players[i].contain_friend_card(this.friend_card)) {
+            if (i == this.first_player_id) {
+                continue
+            }
+            else if (this.all_players[i].contain_friend_card(this.friend_card)) {
                 this.friend_map[i] = this.first_player_id
                 this.friend_map[this.first_player_id] = i
             }
             else{
-                if (!other_id1) {
+                if (other_id1 === null) {
                     other_id1 = i
                 }
                 else{
@@ -136,28 +137,29 @@ class Game {
     get_score_without_value() {
         // 判断是每个用户的输赢
         // 比如[1, -1, 1, -1]表示关单，[2, -2, 2, -2]表示关双，[0, 0, 0, 0]表示平局
-        let score = [0, 0, 0, 0]
-        let friend_id = this.friend_map[this.curr_winner]
+        let first_winner = this.winners_order[0]
+        let score = Array(NUM_PLAYERS).fill(0)
+        let friend_id = this.friend_map[first_winner]
         let friend_order = this.winners_order.indexOf(friend_id)
         // 关双
         if (friend_order == 1) {
-            score[this.curr_winner] = 2
+            score[first_winner] = 2
             score[friend_id] = 2
         }
         // 关单
         else if (friend_order == 2) {
-            score[this.curr_winner] = 1
+            score[first_winner] = 1
             score[friend_id] = 1
         }
         // 平局
         else {
-            score[this.curr_winner] = 0
+            score[first_winner] = 0
             score[friend_id] = 0
         }
 
         for (let i = 0; i < NUM_PLAYERS; i++) {
-            if (score[i] !== score[this.curr_winner]) {
-                score[i] = -score[this.curr_winner]
+            if (score[i] !== score[first_winner]) {
+                score[i] = -score[first_winner]
             }
         }
         return score
@@ -165,10 +167,10 @@ class Game {
 
     get_final_value() {
         // players_value是赏，normal_score涉及关双还是关单
-        let players_value = [0, 0, 0, 0]
+        let players_value = Array(NUM_PLAYERS).fill(0)
         let total_value = 0
         for (let i = 0; i < NUM_PLAYERS; i++) {
-            value = this.player_value_calculator[i].calc()
+            let value = this.player_value_calculator[i].calc()
             total_value += value
             players_value.push(value)
         }
@@ -178,21 +180,34 @@ class Game {
             this.players_score[i] = players_value[i] * (NUM_PLAYERS - 1) - (total_value - players_value[i]) + normal_score[i]
             this.global_players_score[i] += this.players_score[i]
         }
-        return players_value, normal_score
+        return {players_value, normal_score}
+    }
+
+    is_over(){
+        if (this.winners_order.length == NUM_PLAYERS - 1) {
+            return true
+        }
+        else if (this.winners_order.length == 2) {
+            return this.winners_order.includes(this.friend_map[this.winners_order[0]])
+        }
+        return false
     }
 
     step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state) {
         let show_value_cards = null
+        let rank = null
         if (out_state === OutState.VALID) {
             this.all_players[curr_player_id].cards = all_cards
             this.last_valid_cards_info = cards_info
             this.last_valid_player_id = curr_player_id
             this.player_value_calculator[curr_player_id].update(raw_cards, cards_value)
 
+            this.continue_pass_cnts = 0
+
             if (all_cards.length === 0) {
                 // 当前玩家没有手牌了
-                this.remain_cnts -= 1
                 this.winners_order.push(curr_player_id)
+                rank = this.winners_order.length
             }
             if (cards_value > 0) {
                 // 有赏，就全部返回，包括王
@@ -202,19 +217,18 @@ class Game {
                 // 无赏，就只返回王
                 show_value_cards = raw_cards.filter(card => SPECIAL_CARDS.has(card))
             }
-            this.continue_pass_cnts = 0
         }
-        else if (out_state === OutState.PASS){
+        else if (out_state === OutState.PASS) {
             this.continue_pass_cnts += 1
         }
 
-        if (this.winners_order.length == NUM_PLAYERS - 1) {
+        if (this.is_over()) {
             for(let i = 0; i < NUM_PLAYERS; i++) {
                 if (!this.winners_order.includes(i)){
                     this.winners_order.push(i)
                 }
             }
-            players_value, normal_score = this.get_final_value()
+            let {players_value, normal_score} = this.get_final_value()
             return {
                 status: 0,
                 msg: "游戏结束",
@@ -225,31 +239,38 @@ class Game {
         else {
             let next_player_id = (curr_player_id + 1) % NUM_PLAYERS
             while (this.all_players[next_player_id].cards.length == 0) {
+                this.continue_pass_cnts += 1
                 next_player_id = (next_player_id + 1) % NUM_PLAYERS
             }
-            // TODO: 当上家出完手牌后的逻辑有点不懂
-            // 上家出完后，有两种情况：1. 朋友牌未出 2. 朋友牌已出
-            // 如果情况为1那么正常出牌（但是周期变为3了），3轮还是没有人出牌，则重置，所以is_start不是用id相等，而是用连续pass的次数除以周期
-            // 如果为情况2，那么必须别人要不起的时候，才能保朋友?
-            // this.game_state.is_start = (this.game_state.last_valid_player_id === player_id)
-            let is_start = (this.continue_pass_cnts + 1) === this.remain_cnts
+            /* TODO: 当上家出完手牌后的逻辑有点不懂
+                上家出完后，有两种情况：1. 朋友牌未出 2. 朋友牌已出
+                如果情况为1那么正常出牌（但是周期变为3了），3轮还是没有人出牌，则重置，所以is_start不是用id相等，而是用连续pass的次数除以周期
+                如果为情况2，那么必须别人要不起的时候，才能保朋友?
+                还有一个问题：是对方的朋友牌出了才可以，没有朋友牌的一对可以互保吗？
+            */
+            if(this.continue_pass_cnts >= NUM_PLAYERS - 1){
+                this.is_start = true
+                this.continue_pass_cnts = 0
+            }
+            else{
+                this.is_start = false
+            }
             const is_friend = (out_state == OutState.NO_CARDS) && (this.friend_map[next_player_id] === this.game_state.last_valid_player_id)
             // 如果回合结束还是自己 或者 朋友牌已出，当一方出完且下个用户是朋友时重置
-            // TODO: 是对方的朋友牌出了才可以，没有朋友牌的一对可以互保吗？
-            is_start = is_start || is_friend
-            if (is_start) {
+            this.is_start = this.is_start || is_friend
+
+            if (this.is_start) {
                 this.last_valid_cards_info = null
                 this.last_valid_player_id = null
             }
 
-            let resp = {
+            return {
                 status: 1,
                 msg: "游戏进行中",
-                is_start: is_start,
                 next_player_id: next_player_id,
-                value_cards: show_value_cards
+                value_cards: show_value_cards,
+                rank: rank
             }
-            return resp
         }
     }
 
