@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+    <link rel="stylesheet" type="text/css" href="./css/home.css">
+</head>
+
+<body>
+    <div class="main">
+        <div class="header">
+            <h1>四人纸牌-找朋友</h1>
+        </div>
+        <div class="logo">
+            <img src="asset/logo.webp">
+        </div>
+        <div class="button-group">
+            <button onclick="create_home()">创建房间</button>
+            <button onclick="join_home()">加入房间</button>
+        </div>
+    </div>
+
+    <div class="input-pop">
+        <div class="input-pop-inner">
+            <div>
+                <input id="room-number" placeholder="请输入房间号"></input>
+            </div>
+            <div class="button-group">
+                <button id="button-yes">确定</button>
+                <button id="button-no">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/js-cookie/3.0.1/js.cookie.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
+    <script>
+        function random_gene_player() {
+            let player_name = Math.floor(Math.random() * 10)
+            let player_icon = null
+            return { player_name, player_icon }
+        }
+
+        let player_name = localStorage.getItem("player_name")
+        if (player_name === null) {
+            let { player_name, player_icon } = random_gene_player()
+            localStorage.setItem("player_name", player_name)
+            localStorage.setItem("player_icon", player_icon)
+        }
+
+        function create_home() {
+            location.href = "./play.html?func=create"
+        }
+
+        function join_home() {
+            $(".input-pop").fadeIn(100)
+            $(".main").fadeOut(100)
+            $("#button-yes").click(function () {
+                const room_number = $("#room-number").val()
+                if (/^[0-9]{6}$/.exec(room_number)) {
+                    location.href = `./play.html?func=join&inputed_room_number=${room_number}`
+                }
+                else {
+                    alert("房间号必须为6为数字")
+                }
+            })
+
+            $("#button-no").click(function () {
+                $(".main").fadeIn(100)
+                $(".input-pop").fadeOut(100)
+            })
+        }
+
+    </script>
+</body>
+
+</html>

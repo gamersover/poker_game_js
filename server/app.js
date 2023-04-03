@@ -24,11 +24,11 @@ io.on('connection', (socket) => {
 
     socket.on("create_room", (data) => {
         let result = room_handler.create_room(data.room_number, data.player_name, socket.id)
-        socket.join(result.room_number)
-        socket.player_name = result.player_name
-        socket.room_number = result.room_number
-        socket.player_id = result.player_id
         if (result.status == 1) {
+            socket.join(result.room_number)
+            socket.player_name = result.player_name
+            socket.room_number = result.room_number
+            socket.player_id = result.player_id
             logger.info(`房间${result.room_number}：用户${result.player_name}创建成功`)
         }
         else {
@@ -39,11 +39,11 @@ io.on('connection', (socket) => {
 
     socket.on("join_room", (data) => {
         let result = room_handler.join_room(data.room_number, data.player_name, socket.id)
-        socket.join(result.room_number)
-        socket.player_name = result.player_name
-        socket.room_number = result.room_number
-        socket.player_id = result.player_id
         if (result.status == 1) {
+            socket.join(result.room_number)
+            socket.player_name = result.player_name
+            socket.room_number = result.room_number
+            socket.player_id = result.player_id
             logger.info(`房间${result.room_number}：用户${result.player_name}加入成功`)
             socket.emit("join_room", result)
             socket.to(result.room_number).emit("join_room_others", result)
@@ -58,6 +58,7 @@ io.on('connection', (socket) => {
         let result = room_handler.prepare_start(socket.room_number, socket.player_name, socket.player_id)
         if (result.status == 1) {
             logger.info(`房间${socket.room_number}：用户${socket.player_name}已准备`)
+            socket.emit("prepare_start", result)
             io.to(socket.room_number).emit("prepare_start_global", result)
 
             if (room_data[socket.room_number].prepared_cnt == 4) {
@@ -86,7 +87,7 @@ io.on('connection', (socket) => {
             }
         }
         else {
-            logger.error(result.msg)
+            socket.emit("prepare_failed", result)
         }
     })
 
@@ -162,7 +163,10 @@ io.on('connection', (socket) => {
     })
 
     socket.on("disconnect", (data) => {
-        console.log(data)
+        if (socket.player_id == room_data[socket.room_number].room_host_id) {
+            logger.info(`房间${socket.room_number}的房主已退出`)
+            delete room_data[socket.room_number]
+        }
     })
 
 });

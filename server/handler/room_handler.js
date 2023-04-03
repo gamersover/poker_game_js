@@ -25,6 +25,7 @@ function create_room(room_number, player_name, socket_id) {
             status: 1,
             msg: `创建房间成功`,
             room_number: room_number,
+            host_id: room_data[room_number].room_host_id,
             player_name: player_name,
             player_id: player_id,
             players_info: room_data[room_number].players_info
@@ -38,10 +39,10 @@ function create_room(room_number, player_name, socket_id) {
 
 function join_room(room_number, player_name, socket_id){
     if (!room_data[room_number]) {
-        return {status: 0, msg: "房间未创建，无法加入"}
+        return {status: 0, msg: "房间未创建，无法加入", room_number: room_number}
     }
     if (room_data[room_number].all_players_name.length == 4) {
-        return {status: 0, msg: "该房间已满，无法进入！"}
+        return {status: 0, msg: "该房间已满，无法进入！", room_number: room_number}
     }
 
     let n = 1
@@ -69,6 +70,7 @@ function join_room(room_number, player_name, socket_id){
         status: 1,
         msg: `玩家${player_name}进入房间${room_number}`,
         room_number: room_number,
+        host_id: room_data[room_number].room_host_id,
         player_name: player_name,
         player_id: player_id,
         players_info: room_data[room_number].players_info

@@ -1,0 +1,162 @@
+html,
+body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(96, 112, 149, 0.227)
+}
+
+.top {
+    border: 1px solid #ccc;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    height: 20vh;
+}
+
+.top .game-info {
+    width: 30%;
+}
+
+.top .system-info {
+    width: 30%;
+}
+
+.neck {
+    border: 1px solid #ccc;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    height: 20vh;
+}
+
+.main {
+    border: 1px solid #ccc;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* justify-content: space-around; */
+
+    text-align: center;
+
+    flex: 1;
+}
+
+.main .choice {
+    width: 15%;
+    height: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.main .cards {
+    flex: 1;
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.main .bottom {
+    height: 20%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.main .choice button {
+    font-size: 3vh;
+    width: 15vh;
+}
+
+.player-icon img {
+    width: 10vh;
+    opacity: 0.2;
+}
+
+#p1 {
+    display: flex;
+    text-align: left;
+}
+
+.player-name {
+    width: 10vh;
+    display: inline-block;
+}
+
+.player-score {
+    display: inline-block;
+}
+
+.num-cards {
+    display: inline-block;
+}
+
+.icon-border {
+    border: 2px solid rgba(85, 85, 199, 0.647)
+}
+
+#prepare {
+    background-color: rgba(163, 20, 20, 0.489);
+}
+
+#pass {
+    display: none;
+    background-color: rgba(255, 0, 0, 0.364);
+}
+
+#go {
+    display: none;
+    background-color: rgba(7, 129, 7, 0.654);
+}
+
+button {
+    font-size: 4vh;
+    height: 7vh;
+    width: 25vh;
+    border-radius: 2vh;
+}
+
+.cards div {
+    position: absolute;
+}
+
+#user-state {
+    position: relative;
+    display: none;
+}
+
+#user-state div {
+    position: absolute;
+}
+
+.cards img {
+    height: 25vh;
+    box-shadow: 5px -3px 5px 2px #aaaaaa;
+}
+
+#user-state img {
+    height: 15vh;
+    box-shadow: 3px -1px 3px 1px #aaaaaa;
+}
+
+.neck-center {
+    position: relative;
+    flex: 1;
+    height: 100%;
+}
+
+.neck-center div {
+    position: absolute;
+}
+
+.neck-center img {
+    height: 15vh;
+    box-shadow: 3px -1px 3px 1px #aaaaaa;
+}

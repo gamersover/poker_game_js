@@ -1,4 +1,5 @@
 exports.geneRoomNumber = (size = 6) => {
+  return "000000" /*TODO: 测试房间号*/
   let room_number = ''
   for (let i = 0; i < size; i++) {
     room_number += Math.floor(Math.random() * 10) + ''

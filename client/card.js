@@ -174,14 +174,14 @@ function get_cards_info(cards) {
 }
 
 function rank_raw_cards(raw_out_cards){
-    let out_cards = raw_out_cards.split(" ")
+    // let out_cards = raw_out_cards.split(" ")
 
-    out_cards.sort(
+    raw_out_cards.sort(
         (a, b) => {
             return get_card_rank(a.split("->").slice(-1)[0]) - get_card_rank(b.split("->").slice(-1)[0])
         }
     )
-    return out_cards
+    return raw_out_cards
 }
 
 function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_start, cards){

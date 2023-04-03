@@ -1,0 +1,64 @@
+.main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.header {
+    font-size: 3vh;
+    text-align: center;
+}
+
+.logo {
+    text-align: center;
+}
+
+.logo img {
+    width: 60vh;
+}
+
+
+.button-group {
+    margin: 0 auto;
+    width: 70vh;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.main .button-group {
+
+    flex: 1;
+}
+
+.button-group button{
+    font-size: 4vh;
+    height: 10vh;
+    width: 25vh;
+    border-radius: 2vh;
+}
+
+.input-pop {
+    position: fixed;
+    width: 100vh;
+    height: 50vh;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* border: 1px solid pink; */
+    box-shadow: 0px 0px 10px 3px gray;
+    background-color: white;
+    display: none;
+}
+
+.input-pop-inner {
+    height: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+#room-number {
+    font-size: 5.5vh;
+}
