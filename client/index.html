@@ -81,7 +81,7 @@
 
 
 <script src="./card.js"></script>
-<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script src="http://192.168.31.81:3000/socket.io/socket.io.js"></script>
 <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>
 <script>
     const game_messages = []
@@ -317,7 +317,7 @@
                         text = "被关单，"
                     }
                     else{
-                        text = "平局"
+                        text = "平局，"
                     }
                     text += `讨赏值：${data.game_result[i].value}，`
                     text += `该局得分：${data.game_result[i].final_score}，`
@@ -399,4 +399,5 @@
             $("#player_error").text("非出牌时间")
         }
     }
+
 </script>

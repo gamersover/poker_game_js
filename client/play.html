@@ -12,9 +12,26 @@
 <body>
     <div class="top">
         <div class="game-info">
-            房间号: <span id="room-number">000000</span>
-            <br />
-            局数: <span id="num-rounds">0</span>
+            <div class="game-info-left">
+                <div class="circle-container" id="room-number">
+                    <div class="circle">房</div>
+                    <div class="rounded-rect">000000</div>
+                </div>
+                <div class="circle-container" id="num-rounds">
+                    <div class="circle">局</div>
+                    <div class="rounded-rect">0</div>
+                </div>
+            </div>
+            <div class="game-info-right">
+                <div class="circle-container" id="friend-info">
+                    <div class="circle">朋</div>
+                    <div class="rounded-rect">
+                        <div class="friend-card"></div>
+                        <div>X</div>
+                        <div class="friend-cards-left-cnt">2</div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="player" id="p3">
             <div class="player-info">
@@ -22,21 +39,22 @@
                     <div class="player-icon">
                         <img src="./asset/logo12.png">
                     </div>
-                    <div class="player-score"><span>分:</span><span class="digits">0</span></div>
+                    <div class="player-name"></div>
+                    <div class="circle-container player-score">
+                        <div class="circle">分</div>
+                        <div class="rounded-rect">0</div>
+                    </div>
                 </div>
                 <div class="right">
-                    <div class="player-name">张三</div>
-                    <div class="num-cards"><span class="digits">3</span><span>张</span></div>
+                    <div class="num-cards-container">
+                        <div class="num-cards-img"><img src="./asset/blue.svg"></div>
+                        <div class="num-cards">27</div>
+                    </div>
+                    <div class="value-cards">
+                    </div>
                 </div>
             </div>
-            <div class="value-cards">
-                王牌
-            </div>
 
-        </div>
-        <div class="friend-info">
-            <div>朋友牌</div>
-            <div class="friend-card"></div>
         </div>
     </div>
 
@@ -47,15 +65,21 @@
                     <div class="player-icon">
                         <img src="./asset/logo12.png">
                     </div>
-                    <div class="player-score"><span>分:</span><span class="digits">0</span></div>
+                    <div class="player-name"></div>
+                    <div class="circle-container player-score">
+                        <div class="circle">分</div>
+                        <div class="rounded-rect">0</div>
+                    </div>
                 </div>
                 <div class="right">
-                    <div class="player-name">张三</div>
-                    <div class="num-cards"><span class="digits">3</span><span>张</span></div>
+
+                    <div class="num-cards-container">
+                        <div class="num-cards-img"><img src="./asset/blue.svg"></div>
+                        <div class="num-cards">27</div>
+                    </div>
                 </div>
             </div>
             <div class="value-cards">
-                王牌
             </div>
         </div>
         <div class="neck-center">
@@ -65,36 +89,41 @@
         </div>
         <div class="player" id="p2">
             <div class="player-info">
+                <div class="right">
+                    <div class="num-cards-container">
+                        <div class="num-cards-img"><img src="./asset/blue.svg"></div>
+                        <div class="num-cards">27</div>
+                    </div>
+                </div>
                 <div class="left">
                     <div class="player-icon">
                         <img src="./asset/logo12.png">
                     </div>
-                    <div class="player-score"><span>分:</span><span class="digits">0</span></div>
-                </div>
-                <div class="right">
-                    <div class="player-name">张三</div>
-                    <div class="num-cards"><span class="digits">3</span><span>张</span></div>
+                    <div class="player-name"></div>
+                    <div class="circle-container player-score">
+                        <div class="circle">分</div>
+                        <div class="rounded-rect">0</div>
+                    </div>
                 </div>
             </div>
             <div class="value-cards">
-                王牌
             </div>
         </div>
     </div>
 
     <div class="main">
-        <div class="player-container">
-            <div class="player" id="p1">
-                <div class="player-info">
-                    <div class="left">
-                        <div class="player-icon">
-                            <img src="./asset/logo12.png">
-                        </div>
-                        <div class="player-score"><span>分:</span><span class="digits">0</span></div>
+        <div class="p1-container">
+            <div id="p1">
+                <div class="p1-left">
+                    <div class="player-icon">
+                        <img src="./asset/logo12.png">
                     </div>
-                    <div class="right">
-                        <div class="player-name">张三</div>
-                        <div class="num-cards"><span class="digits">3</span><span>张</span></div>
+                </div>
+                <div class="p1-right">
+                    <div class="player-name"></div>
+                    <div class="circle-container player-score">
+                        <div class="circle">分</div>
+                        <div class="rounded-rect">0</div>
                     </div>
                 </div>
             </div>
@@ -111,7 +140,6 @@
             </div>
         </div>
         <div class="value-cards">
-            王牌
         </div>
     </div>
     <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.0.js"></script>

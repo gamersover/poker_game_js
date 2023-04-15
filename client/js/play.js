@@ -23,14 +23,15 @@ function update_room_state(data, player_data) {
     for (let player_id in data.players_info) {
         div_name = player_id_to_div(player_id)
         $(`#${div_name} .player-name`).text(data.players_info[player_id].player_name)
-        if (data.players_info[player_id].state == 0) {
-            // $(`#${div_name} .user_state`).text("加入房间")
+        if (data.players_info[player_id].state >= 0) {
+            $(`#${div_name} .player-info .left`).css("visibility", "visible")
         }
         else if (data.players_info[player_id].state == 1) {
+            console.log($(`#${div_name} .player-icon img`))
             $(`#${div_name} .player-icon img`).css("opacity", "1")
         }
 
-        $("#room-number").text(data.room_number)
+        $("#room-number .rounded-rect").text(data.room_number)
     }
 }
 
@@ -54,8 +55,8 @@ function render_all_cards(all_cards, parent_class_name) {
 function render_out_cards(out_cards, out_id) {
     let n = out_cards.length;
     let trans_x = null;
-    let trans_y = null;
-    if (out_id === "p1-out" || out_id === "p3-out") {
+    let trans_y = "0";
+    if (out_id === "p1-out") {
         trans_y = "-30%"
     }
     else if (out_id === "p2-out" || out_id === "p4-out") {
@@ -63,10 +64,10 @@ function render_out_cards(out_cards, out_id) {
     }
     for (let i = 1; i <= n; i++) {
         if (out_id === "p1-out" || out_id === "p3-out") {
-            trans_x = (i - 1 - n / 2) * 20
+            trans_x = 80 + (i - 1) * 20
         }
         else if(out_id === "p2-out") {
-            trans_x = 400 - (n - i) * 20
+            trans_x = 450 - (n - i) * 20
         }
         else {
             trans_x = (i - 1) * 20
@@ -81,13 +82,14 @@ function render_out_text(out_id, out_text) {
     }
     else {
         let top = "0%";
-        let left = "0%";
+        let left = "15%";
         if (out_id === "p2-out") {
-            top = "10%";
-            left = "60%";
+            top = "25%";
+            left = "84%";
         }
         else if (out_id === "p4-out") {
-            top = "10%"
+            top = "25%"
+            left = "3%"
         }
         $(`#${out_id}`).html(`<div class='out-text' style='top: ${top}; left: ${left}'><h4>${out_text}</h4><div>`)
     }
@@ -237,14 +239,17 @@ function prepare() {
             $("#go").hide()
         }
         $("#user-state").hide()
+        $(".player-info .right").css("visibility", "visible")
 
         $(`.cards div`).remove()
         render_all_cards(player_data.all_cards, "cards")
 
         $("#num-rounds").text(player_data.num_rounds)
         first_player_div_name = player_id_to_div(data.first_player_id)
+
         $(`#${first_player_div_name} .player-icon img`).addClass("icon-border")
         $(".friend-card").html(`<img src='./asset/poker/fronts/${player_data.friend_card}.svg'></img>`)
+        $("#friend-info .rounded-rect").css("visibility", "visible")
     })
 
     socket.on("game_step", (data) => {
@@ -267,12 +272,12 @@ function prepare() {
 
         if (data.status === 1) {
             if (data.has_friend_card) {
-                $(`#${last_player_div_name} .friend_card`).text(`${player_data.friend_card}（已出）`)
+                $('.friend-cards-left-cnt').text($('.friend-cards-left-cnt').text() - 1)
             }
 
             let last_raw_cards = rank_raw_cards(data.last_valid_cards)
 
-            out_id = player_id_to_div(data.last_player_id) + "-out"
+            out_id = last_player_div_name + "-out"
 
             $(`#${out_id} div`).remove()
             render_out_cards(last_raw_cards, out_id)
@@ -283,14 +288,27 @@ function prepare() {
 
             if (data.last_player_id !== player_data.player_id) {
                 if (data.last_player_num_cards !== null) {
-                    $(`#${last_player_div_name} .user_cards`).text(data.last_player_num_cards + "张")
+                    $(`#${last_player_div_name} .num-cards`).text(data.last_player_num_cards)
+                    // $(`#${last_player_div_name} .num-cards`).css("visibility", "visible")
+                }
+                else {
+                    $(`#${last_player_div_name} .num-cards`).text("?")
                 }
             }
 
             if (data.value_cards) {
-                // 给上个用户显示赏牌
-                var text = $(`#${last_player_div_name} .value_cards`).text()
-                $(`#${last_player_div_name} .value_cards`).text(text + " " + data.value_cards.join(" "))
+                // 给上个用户显示王牌
+                let joker_cards = data.value_cards.filter((card) => SPECIAL_CARDS.has(card))
+                let show_obj;
+                if (last_player_div_name === "p1") {
+                    show_obj = $('.main .value-cards')
+                }
+                else {
+                    show_obj = $(`#${last_player_div_name} .value-cards`)
+                }
+                for(let i = 1; i <= joker_cards.length; i++) {
+                    show_obj.append(`<div style='z-index: ${i}'><img src='./asset/poker/fronts/${joker_cards[i - 1]}.svg'></img></div>`)
+                }
             }
         }
         else if (data.status === 2) {
