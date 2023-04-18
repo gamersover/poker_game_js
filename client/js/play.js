@@ -26,7 +26,7 @@ function update_room_state(data, player_data) {
         if (data.players_info[player_id].state >= 0) {
             $(`#${div_name} .player-info .left`).css("visibility", "visible")
         }
-        else if (data.players_info[player_id].state == 1) {
+        if (data.players_info[player_id].state == 1) {
             console.log($(`#${div_name} .player-icon img`))
             $(`#${div_name} .player-icon img`).css("opacity", "1")
         }
@@ -49,10 +49,11 @@ function render_all_cards(all_cards, parent_class_name) {
         let translateY = selected ? unselected_trans_y : "5%"
         $(this).data("selected", !selected)
         $(this).css('transform', 'translate(' + translateX + 'px, ' + translateY + ')');
+
     })
 }
 
-function render_out_cards(out_cards, out_id) {
+function render_out_cards(out_cards, out_id, value_cards) {
     let n = out_cards.length;
     let trans_x = null;
     let trans_y = "0";
@@ -66,13 +67,18 @@ function render_out_cards(out_cards, out_id) {
         if (out_id === "p1-out" || out_id === "p3-out") {
             trans_x = 80 + (i - 1) * 20
         }
-        else if(out_id === "p2-out") {
+        else if (out_id === "p2-out") {
             trans_x = 450 - (n - i) * 20
         }
         else {
             trans_x = (i - 1) * 20
         }
-        $(`#${out_id}`).append(`<div style='z-index: ${i}; transform: translate(${trans_x}%, ${trans_y})'><img src='./asset/poker/fronts/${out_cards[i - 1]}.svg'></img></div>`)
+        if (value_cards && value_cards.includes(out_cards[i - 1])) {
+            $(`#${out_id}`).append(`<div style='z-index: ${i}; transform: translate(${trans_x}%, ${trans_y})'><img class="card-border" src='./asset/poker/fronts/${out_cards[i - 1]}.svg'></img></div>`)
+        }
+        else {
+            $(`#${out_id}`).append(`<div style='z-index: ${i}; transform: translate(${trans_x}%, ${trans_y})'><img src='./asset/poker/fronts/${out_cards[i - 1]}.svg'></img></div>`)
+        }
     }
 }
 
@@ -92,6 +98,12 @@ function render_out_text(out_id, out_text) {
             left = "3%"
         }
         $(`#${out_id}`).html(`<div class='out-text' style='top: ${top}; left: ${left}'><h4>${out_text}</h4><div>`)
+    }
+}
+
+function render_joker(joker_cards, out_id) {
+    for (let i = 1; i <= joker_cards.length; i++) {
+        $(`#${out_id} .value-cards`).append(`<div style='z-index: ${i}'><img src='./asset/poker/fronts/${joker_cards[i - 1]}.svg'></img></div>`)
     }
 }
 
@@ -278,9 +290,8 @@ function prepare() {
             let last_raw_cards = rank_raw_cards(data.last_valid_cards)
 
             out_id = last_player_div_name + "-out"
-
             $(`#${out_id} div`).remove()
-            render_out_cards(last_raw_cards, out_id)
+            render_out_cards(last_raw_cards, out_id, data.value_cards)
 
             if (data.rank) {
                 $(`#${last_player_div_name} .user_state`).text(`排名-${data.rank}`)
@@ -289,7 +300,6 @@ function prepare() {
             if (data.last_player_id !== player_data.player_id) {
                 if (data.last_player_num_cards !== null) {
                     $(`#${last_player_div_name} .num-cards`).text(data.last_player_num_cards)
-                    // $(`#${last_player_div_name} .num-cards`).css("visibility", "visible")
                 }
                 else {
                     $(`#${last_player_div_name} .num-cards`).text("?")
@@ -299,16 +309,8 @@ function prepare() {
             if (data.value_cards) {
                 // 给上个用户显示王牌
                 let joker_cards = data.value_cards.filter((card) => SPECIAL_CARDS.has(card))
-                let show_obj;
-                if (last_player_div_name === "p1") {
-                    show_obj = $('.main .value-cards')
-                }
-                else {
-                    show_obj = $(`#${last_player_div_name} .value-cards`)
-                }
-                for(let i = 1; i <= joker_cards.length; i++) {
-                    show_obj.append(`<div style='z-index: ${i}'><img src='./asset/poker/fronts/${joker_cards[i - 1]}.svg'></img></div>`)
-                }
+                console.log(data.value_cards)
+                render_joker(joker_cards, last_player_div_name)
             }
         }
         else if (data.status === 2) {

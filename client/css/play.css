@@ -6,8 +6,8 @@ body {
     background-color: rgba(96, 112, 149, 0.227);
     font-size: 1vh;
 }
-/*
-div {
+
+/* div {
     border: 1px solid red;
 } */
 
@@ -118,7 +118,7 @@ div {
     background-color:rgba(120, 149, 218, 0.4);
     width: 8vh;
     height: 100%;
-    visibility: hidden;
+    /* visibility: hidden; */
 }
 
 .player-info .right {
@@ -128,7 +128,7 @@ div {
     flex-direction: column;
     justify-content: space-between;
     width: 7vh;
-    visibility: hidden;
+    /* visibility: hidden; */
 }
 
 
@@ -173,6 +173,22 @@ div {
 .num-cards-img img {
     height: 8vh;
     opacity: 1;
+}
+
+.value-cards-container {
+    height: 50%;
+    width: 100%;
+
+}
+
+.value-cards {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.value-cards img {
+    width: 80%;
 }
 
 .num-cards {
@@ -335,6 +351,13 @@ button {
     position: relative;
     width: 100%;
     text-align: center;
+}
+
+#p3-out.out-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .out-section div {
