@@ -1,3 +1,5 @@
+const server_ip = "192.168.3.35"
+
 function getSearchString(key, Url) {
     var str = Url;
     str = str.substring(1, str.length); // 获取URL中?之后的字符（去掉第一位的问号）
@@ -27,11 +29,36 @@ function update_room_state(data, player_data) {
             $(`#${div_name} .player-info .left`).css("visibility", "visible")
         }
         if (data.players_info[player_id].state == 1) {
-            console.log($(`#${div_name} .player-icon img`))
             $(`#${div_name} .player-icon img`).css("opacity", "1")
         }
 
         $("#room-number .rounded-rect").text(data.room_number)
+    }
+}
+
+
+function get_next_card(all_cards, curr_card, offset) {
+    offset = offset < 0 ? offset + all_cards.length : offset
+    return all_cards[(all_cards.indexOf(curr_card) + offset) % all_cards.length]
+}
+
+
+function joker_change(jokers){
+    $(".joker-change-pop").html("")
+    for (let joker of jokers) {
+        let change_cards = [$(joker).data("cardname").split('-')[0]]
+        for (let c of NORMAL_CARDS) {
+            change_cards.push(change_cards[0] + "-" + c)
+        }
+        let newitems = $("<div data-cardname=" + $(joker).data("cardname") + "><img src='./asset/poker/fronts/" + $(joker).data("cardname")+ ".svg'></div>")
+        newitems.on("click", function() {
+            let new_cardname = get_next_card(change_cards, $(this).data("cardname"), 1)
+            $(this).html("<img src='./asset/poker/fronts/" + new_cardname + ".svg'>")
+            $(this).data("cardname", new_cardname)
+            $(joker).html("<img src='./asset/poker/fronts/" + new_cardname + ".svg'>")
+            $(joker).data("cardname", new_cardname)
+        })
+        $(".joker-change-pop").append(newitems)
     }
 }
 
@@ -40,16 +67,31 @@ function render_all_cards(all_cards, parent_class_name) {
     let unselected_trans_y = "30%";
     for (let i = 1; i <= n; i++) {
         let trans_x = (i - 1 - n / 2) * 30;
-        $(`.${parent_class_name}`).append(`<div data-selected='false' data-cardname='${all_cards[i - 1]}' style='z-index: ${i}; transform: translate(${trans_x}%, ${unselected_trans_y})'><img src='./asset/poker/fronts/${all_cards[i - 1]}.svg'></img></div>`)
+        $(`.${parent_class_name}`).append(`<div data-selected='false' data-cardname='${all_cards[i - 1]}' style='z-index: ${i}; transform: translate(${trans_x}%, ${unselected_trans_y})'><img src='./asset/poker/fronts/${all_cards[i - 1]}.svg'></div>`)
     }
 
+    let selected_joker_cards = []
     $(`.${parent_class_name} div`).on("click", function () {
         let translateX = $(this).css('transform').split(',')[4]
         let selected = $(this).data('selected');
         let translateY = selected ? unselected_trans_y : "5%"
         $(this).data("selected", !selected)
-        $(this).css('transform', 'translate(' + translateX + 'px, ' + translateY + ')');
+        $(this).css('transform', 'translate(' + translateX + 'px, ' + translateY + ')')
 
+        selected_joker_cards = []
+        $(".cards div").each(function () {
+            if ($(this).data('selected') === true && SPECIAL_CARDS.has($(this).data("cardname").split('-')[0])) {
+                selected_joker_cards.push(this)
+            }
+        })
+
+        if (selected_joker_cards.length > 0) {
+            $(".joker-change-pop").css("visibility", "visible")
+            joker_change(selected_joker_cards)
+        }
+        else {
+            $(".joker-change-pop").css("visibility", "hidden")
+        }
     })
 }
 
@@ -74,10 +116,10 @@ function render_out_cards(out_cards, out_id, value_cards) {
             trans_x = (i - 1) * 20
         }
         if (value_cards && value_cards.includes(out_cards[i - 1])) {
-            $(`#${out_id}`).append(`<div style='z-index: ${i}; transform: translate(${trans_x}%, ${trans_y})'><img class="card-border" src='./asset/poker/fronts/${out_cards[i - 1]}.svg'></img></div>`)
+            $(`#${out_id}`).append(`<div style='z-index: ${i}; transform: translate(${trans_x}%, ${trans_y})'><img class="card-border" src='./asset/poker/fronts/${out_cards[i - 1]}.svg'></div>`)
         }
         else {
-            $(`#${out_id}`).append(`<div style='z-index: ${i}; transform: translate(${trans_x}%, ${trans_y})'><img src='./asset/poker/fronts/${out_cards[i - 1]}.svg'></img></div>`)
+            $(`#${out_id}`).append(`<div style='z-index: ${i}; transform: translate(${trans_x}%, ${trans_y})'><img src='./asset/poker/fronts/${out_cards[i - 1]}.svg'></div>`)
         }
     }
 }
@@ -102,8 +144,59 @@ function render_out_text(out_id, out_text) {
 }
 
 function render_joker(joker_cards, out_id) {
+    let trans_y;
     for (let i = 1; i <= joker_cards.length; i++) {
-        $(`#${out_id} .value-cards`).append(`<div style='z-index: ${i}'><img src='./asset/poker/fronts/${joker_cards[i - 1]}.svg'></img></div>`)
+        if (out_id === "p1") {
+            trans_y = 20 * (i - 1)
+        }
+        else {
+            trans_y = -20 + 15 * (i - 1)
+        }
+        $(`#${out_id} .value-cards`).append(`<div style='z-index: ${i}; transform: translate(10%, ${trans_y}%)'><img src='./asset/poker/fronts/${joker_cards[i - 1]}.svg'></div>`)
+    }
+}
+
+function render_last_player_state(last_player_div_name, data) {
+    if (data.has_friend_card) {
+        $('.friend-cards-left-cnt').text($('.friend-cards-left-cnt').text() - 1)
+    }
+
+    let last_raw_cards = rank_raw_cards(data.last_valid_cards)
+
+    out_id = last_player_div_name + "-out"
+    $(`#${out_id} div`).remove()
+    render_out_cards(last_raw_cards, out_id, data.value_cards)
+
+    if (data.rank) {
+        $(`#${last_player_div_name} .cards`).append(`<h2>你的排名：${data.rank}</h2>`)
+    }
+
+    if (data.last_player_id !== player_data.player_id) {
+        if (data.last_player_num_cards !== null) {
+            $(`#${last_player_div_name} .num-cards`).text(data.last_player_num_cards)
+        }
+        else {
+            $(`#${last_player_div_name} .num-cards`).text("?")
+        }
+    }
+
+    if (data.value_cards) {
+        // 给上个用户显示王牌
+        let joker_cards = data.value_cards.filter((card) => SPECIAL_CARDS.has(card))
+        render_joker(joker_cards, last_player_div_name)
+    }
+
+    if (data.cards_value > 0) {
+        let old_value = $(`#${last_player_div_name} .delta-score`).text()
+        if (old_value.length > 0) {
+            old_value = parseInt(old_value)
+        }
+        else {
+            old_value = 0
+        }
+        let new_value = data.cards_value + old_value
+        $(`#${last_player_div_name} .delta-score`).text("+" + new_value)
+        $(`#${last_player_div_name} .delta-score`).css("color", "green")
     }
 }
 
@@ -124,7 +217,7 @@ function create_room() {
         alert(`你已在${player_data.room_number}房间，无法创建其他房间`)
     }
     else {
-        socket = io('ws://192.168.31.81:3000', {
+        socket = io(`ws://${server_ip}:3000`, {
             // 显式指定websocket传输层
             transports: ['websocket']
         });
@@ -260,7 +353,7 @@ function prepare() {
         first_player_div_name = player_id_to_div(data.first_player_id)
 
         $(`#${first_player_div_name} .player-icon img`).addClass("icon-border")
-        $(".friend-card").html(`<img src='./asset/poker/fronts/${player_data.friend_card}.svg'></img>`)
+        $(".friend-card").html(`<img src='./asset/poker/fronts/${player_data.friend_card}.svg'>`)
         $("#friend-info .rounded-rect").css("visibility", "visible")
     })
 
@@ -269,6 +362,9 @@ function prepare() {
         $("#go").show()
         $("#user-state").html("")
         $("#p1-out div").remove()
+        if (data.is_friend_help) {
+            alert("由于朋友牌已出，得到朋友帮助")
+        }
         player_data.last_valid_cards_info = data.last_valid_cards_info
         player_data.is_start = data.is_start
     })
@@ -283,38 +379,10 @@ function prepare() {
         $(`#${curr_player_div_name} .player-icon img`).addClass("icon-border")
 
         if (data.status === 1) {
-            if (data.has_friend_card) {
-                $('.friend-cards-left-cnt').text($('.friend-cards-left-cnt').text() - 1)
-            }
-
-            let last_raw_cards = rank_raw_cards(data.last_valid_cards)
-
-            out_id = last_player_div_name + "-out"
-            $(`#${out_id} div`).remove()
-            render_out_cards(last_raw_cards, out_id, data.value_cards)
-
-            if (data.rank) {
-                $(`#${last_player_div_name} .user_state`).text(`排名-${data.rank}`)
-            }
-
-            if (data.last_player_id !== player_data.player_id) {
-                if (data.last_player_num_cards !== null) {
-                    $(`#${last_player_div_name} .num-cards`).text(data.last_player_num_cards)
-                }
-                else {
-                    $(`#${last_player_div_name} .num-cards`).text("?")
-                }
-            }
-
-            if (data.value_cards) {
-                // 给上个用户显示王牌
-                let joker_cards = data.value_cards.filter((card) => SPECIAL_CARDS.has(card))
-                console.log(data.value_cards)
-                render_joker(joker_cards, last_player_div_name)
-            }
+            render_last_player_state(last_player_div_name, data)
         }
         else if (data.status === 2) {
-            out_id = player_id_to_div(data.last_player_id) + "-out"
+            out_id = last_player_div_name + "-out"
             // $(`#${out_id} div`).remove()
             render_out_text(out_id, "要不起")
         }
@@ -322,30 +390,17 @@ function prepare() {
 
     socket.on("game_over_global", (data) => {
         if (data.status === 1) {
-            update_and_show_messages("游戏结局：" + data.winners_order.toString())
-            for (let i = 0; i < data.winners_order.length; i++) {
-                var text = ""
-                if (data.game_result[i].normal_score == 2) {
-                    text = "关双，"
-                }
-                else if (data.game_result[i].normal_score == 1) {
-                    text = "关单，"
-                }
-                else if (data.game_result[i].normal_score == -2) {
-                    text = "被关双，"
-                }
-                else if (data.game_result[i].normal_score == -1) {
-                    text = "被关单，"
-                }
-                else {
-                    text = "平局，"
-                }
-                text += `讨赏值：${data.game_result[i].value}，`
-                text += `该局得分：${data.game_result[i].final_score}，`
-                text += `总得分：${data.game_result[i].global_score}`
-                div_name = player_id_to_div(i)
-                $(`#${div_name} .user_score`).text(text)
+            last_player_div_name = player_id_to_div(data.last_player_id)
+            render_last_player_state(last_player_div_name, data)
+            for (let i = 0; i < data.game_result.length; i++) {
+                let player_res = data.game_result[i]
+                $(`.game-over-inner .w${i} .winner-name`).text(player_res.player_name)
+                $(`.game-over-inner .w${i} .winner-basic-score`).text(player_res.normal_score)
+                $(`.game-over-inner .w${i} .winner-value-score`).text(player_res.value_score)
+                $(`.game-over-inner .w${i} .winner-score`).text(player_res.final_score)
+                $(`.game-over-inner .w${i} .winner-total-score`).text(player_res.global_score)
             }
+            $(".game-over-pop").css("visibility", "visible")
         }
     })
 }
@@ -361,10 +416,10 @@ function game_step() {
 
         let result = is_valid_out_cards(raw_out_cards, false, player_data.last_valid_cards_info, player_data.is_start, player_data.all_cards)
         if (result.status === -1) {
-            alert("无法跳过，请出牌")
+            alert(result.msg)
         }
         else if (result.status === 0) {
-            alert("非法出牌")
+            alert(result.msg)
         }
         else if (result.status === 1) {
             let has_friend_card = false
@@ -380,8 +435,8 @@ function game_step() {
 
             $("#pass").hide()
             $("#go").hide()
-            $("#user-state").html("")
-            $("#user-state").show()
+            $(".joker-change-pop").html("").css("visibility", "hidden")
+            $("#user-state").html("").show()
 
             socket.emit("game_step", {
                 raw_out_cards: raw_out_cards,
@@ -405,6 +460,8 @@ function game_pass() {
         if (result.status === 2) {
             $("#pass").hide()
             $("#go").hide()
+            $(".joker-change-pop").html("")
+            $(".joker-change-pop").css("visibility", "hidden")
             socket.emit("game_step", {
                 out_state: OutState.PASS,
                 // room_number: player_data.room_number,
@@ -420,6 +477,9 @@ function game_pass() {
     }
 }
 
+$(".game-over-button button").on("click", function () {
+    $(".game-over-pop").css("visibility", "hidden")
+})
 
 
 if (func === "create") {

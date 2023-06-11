@@ -51,31 +51,56 @@ class CardsInfo {
 
     is_bigger(other_cards_info) {
         if (!other_cards_info) {
-            return true
+            return { res: true }
         }
         if (this.type === other_cards_info.type) {
             if (this.type !== CardsType.ZHADAN) {
                 if (this.cards_len === other_cards_info.cards_len) {
-                    return this.rank > other_cards_info.rank
+                    if (this.rank > other_cards_info.rank) {
+                        return { res: true }
+                    }
+                    else {
+                        return {
+                            res: false,
+                            msg: "不比上家牌大"
+                        }
+                    }
                 }
                 else {
-                    return false
+                    return {
+                        res: false,
+                        msg: "牌长度不一致"
+                    }
                 }
             }
             else {
                 if (this.cards_len < other_cards_info.cards_len) {
-                    return false
+                    return {
+                        res: false,
+                        msg: "不比上家牌大"
+                    }
                 }
-                else{
-                    return (this.cards_len > other_cards_info.cards_len) || (this.rank > other_cards_info.rank)
+                else {
+                    if ((this.cards_len > other_cards_info.cards_len) || (this.rank > other_cards_info.rank)) {
+                        return { res: true }
+                    }
+                    else {
+                        return {
+                            res: false,
+                            msg: "不比上家牌大"
+                        }
+                    }
                 }
             }
         }
         else if (other_cards_info.type != CardsType.ZHADAN && this.type == CardsType.ZHADAN) {
-            return true
+            return { res: true }
         }
         else {
-            return false
+            return {
+                res: false,
+                msg: "不符合规则或不比上家牌大"
+            }
         }
     }
 }
@@ -133,7 +158,7 @@ function get_cards_info(cards) {
         return new CardsInfo(CardsType.FEIJI, first_card_rank, cards_len)
     }
 
-    if (cards_len >= 4 && cards_len <= 8 && cards.every(card => get_card_name(card) == first_card_name)) {
+    if (cards_len >= 4 && cards.every(card => get_card_name(card) == first_card_name)) {
         return new CardsInfo(CardsType.ZHADAN, first_card_rank, cards_len);
     }
 
@@ -173,26 +198,26 @@ function get_cards_info(cards) {
     return new CardsInfo(CardsType.NOT_VALID)
 }
 
-function rank_raw_cards(raw_out_cards){
+function rank_raw_cards(raw_out_cards) {
     // let out_cards = raw_out_cards.split(" ")
 
     raw_out_cards.sort(
         (a, b) => {
-            return get_card_rank(a.split("->").slice(-1)[0]) - get_card_rank(b.split("->").slice(-1)[0])
+            return get_card_rank(a.split("-").slice(-1)[0]) - get_card_rank(b.split("-").slice(-1)[0])
         }
     )
     return raw_out_cards
 }
 
-function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_start, cards){
+function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_start, cards) {
     // if (cards.length == 0){
     //     return { status: 3, msg: "无手牌" }
     // }
     if (is_pass) {
-        if (is_start){
+        if (is_start) {
             return { status: -1, msg: "你是该回合首位出牌玩家，无法跳过" }
         }
-        else{
+        else {
             return { status: 2, msg: "跳过" }
         }
     }
@@ -202,48 +227,36 @@ function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_st
     let raw_cards = []
     let final_cards = []
     for (let card of out_cards) {
-        let raw_card = card.split('->')[0]
-        if (!cards.includes(raw_card)){
-            return {status: 0, msg: `${raw_card} 不在你的手牌中`}
-        }
-        else{
-            raw_cards.push(raw_card)
-        }
+        let raw_card = card.split('-')[0]
+        raw_cards.push(raw_card)
 
-        if (!card.includes("->")){
+        if (!card.includes("-")) {
             final_cards.push(raw_card)
         }
-        else{
-            if (!SPECIAL_CARDS.has(raw_card.split("_")[0])){
-                return {status: 0, msg: `${raw_card} 不是王牌，无法转换`}
-            }
-            else{
-                let final_card = card.split('->')[1]
-                if (!NORMAL_CARDS.has(final_card)){
-                    return {status: 0, msg: `${card} 转换牌有误`}
-                }
-                else{
-                    // final_card += '_' + CARDS_RANK[final_card]
-                    final_cards.push(final_card)
-                }
-            }
+        else {
+            let final_card = card.split('-')[1]
+            final_cards.push(final_card)
         }
     }
+
     let cards_info = get_cards_info(final_cards)
     let cards_value = get_cards_value(raw_cards)
-    if (cards_info.type === CardsType.NOT_VALID){
-        return {status: 0, msg: `${raw_out_cards} 不符合规则`}
+    if (cards_info.type === CardsType.NOT_VALID) {
+        return { status: 0, msg: '不符合规则' }
     }
-    else if(!cards_info.is_bigger(last_valid_cards_info)){
-        return {status: 0, msg: `${raw_out_cards} 比上家牌小`}
-    }
-    else{
-        return {
-            status: 1,
-            msg: `出牌有效`,
-            raw_cards: raw_cards,
-            cards_value: cards_value,
-            cards_info: cards_info,
+    else {
+        let res = cards_info.is_bigger(last_valid_cards_info)
+        if (!res.res) {
+            return { status: 0, msg: res.msg }
+        }
+        else {
+            return {
+                status: 1,
+                msg: '出牌有效',
+                raw_cards: raw_cards,
+                cards_value: cards_value,
+                cards_info: cards_info,
+            }
         }
     }
 }

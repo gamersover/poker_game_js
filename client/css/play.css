@@ -14,7 +14,7 @@ body {
 .circle-container {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-evenly;
     width: 100%;
 }
 
@@ -48,7 +48,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 20vh;
+    height: 23%;
 }
 
 .top .game-info {
@@ -109,6 +109,7 @@ body {
     display: flex;
     flex-direction: row;
     height: 100%;
+    visibility: hidden;
 }
 
 .player-info .left {
@@ -116,9 +117,8 @@ body {
     align-items: center;
     flex-direction: column;
     background-color:rgba(120, 149, 218, 0.4);
-    width: 8vh;
+    width: 12vh;
     height: 100%;
-    /* visibility: hidden; */
 }
 
 .player-info .right {
@@ -133,7 +133,7 @@ body {
 
 
 .player-icon img {
-    width: 7vh;
+    width: 12vh;
     opacity: 0.2;
 }
 
@@ -151,7 +151,7 @@ body {
 }
 
 .num-cards-container {
-    height: 50%;
+    height: 40%;
     width: 100%;
     display: flex;
     align-items: center;
@@ -171,7 +171,7 @@ body {
 }
 
 .num-cards-img img {
-    height: 8vh;
+    height: 8.5vh;
     opacity: 1;
 }
 
@@ -183,8 +183,16 @@ body {
 
 .value-cards {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+.value-cards div {
+    position: absolute;
 }
 
 .value-cards img {
@@ -216,14 +224,16 @@ body {
 }
 
 .p1-container {
-    width: 10%;
+    width: 15%;
+    height: 12vh;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-#p1 {
+.p1-inner {
     width: 80%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -243,7 +253,17 @@ body {
     display: flex;
     flex-direction: column;
     width: 43%;
+    height: 100%;
     justify-content: center;
+}
+
+.p1-right .player-name {
+    text-align: left;
+    padding: 1vh;
+}
+
+#p1 .value-cards img {
+    width: 50%;
 }
 
 .player-score.circle-container .circle {
@@ -255,7 +275,7 @@ body {
 }
 
 .player-score.circle-container .rounded-rect {
-    width: 44%;
+    width: 60%;
     justify-content: center;
 }
 
@@ -277,7 +297,7 @@ body {
 }
 
 .main-middle .choice {
-    width: 20%;
+    width: 25%;
     height: 20%;
     display: flex;
     align-items: center;
@@ -324,6 +344,7 @@ button {
 
 #p1-out {
     position: relative;
+    display: none;
 }
 
 #p1-out div {
@@ -353,21 +374,8 @@ button {
     text-align: center;
 }
 
-#p3-out.out-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-}
-
 .out-section div {
     position: absolute;
-}
-
-.out-section .pass-text {
-    transform: translate(-50%, -50%);
-    top: 30%;
-    left: 50%;
 }
 
 .out-section img {
@@ -375,10 +383,82 @@ button {
     box-shadow: 3px -1px 3px 1px #aaaaaa;
 }
 
+#user-state {
+    display: none;
+}
+
 #user-state h2 {
     font-size: 4vh;
 }
 
-.player {
-    height: 17vh
+.joker-change-pop {
+    display: flex;
+    justify-content: space-evenly;
+    width: 43vh;
+    height: 20vh;
+    align-items: center;
+
+    position: fixed;
+    top: 34%;
+    left: 40%;
+    /* background-color: #6d5858; */
+    /* visibility: hidden; */
+    z-index: 999;
+    border: 1px solid #c6a4a4;
+    visibility: hidden;
+}
+
+.joker-change-pop div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 10vh;
+}
+
+.joker-change-pop img {
+    width: 10vh;
+    box-shadow: 0px 0px 7px 4px #7c7c7c;
+}
+
+.game-over-pop {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: azure;
+    visibility: hidden;
+    z-index: 999;
+}
+
+.game-over-panel {
+    width: 60%;
+    height: 70%;
+    background-color:rgba(208, 216, 163, 0.647);
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-direction: column;
+}
+
+.game-over-head {
+    font-size: 5vh;
+    font-weight: bold;
+}
+
+.game-over-inner table {
+    font-size: 4vh;
+}
+
+.game-over-inner td {
+    padding: 2vh 8vh;
+    text-align: center;
+}
+
+.game-over-button button {
+    font-size: 3vh;
+    width: 12vh;
+    background-color: #51956c;
+    color: white;
 }

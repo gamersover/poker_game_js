@@ -171,7 +171,7 @@ function get_cards_info(cards) {
 
 
 function get_cards_value(raw_cards) {
-    // 判断出牌（炸弹）的赏钱
+    // 判断出牌的赏钱
     let value = 0;
 
     // 四个王
@@ -214,6 +214,31 @@ function get_cards_value(raw_cards) {
 }
 
 
+function get_all_zhadan(cards) {
+    // TODO: 忽略王牌
+    let zhadans = []
+    let left = 0
+    let right = 1
+    let card = cards[left]
+    while (right < cards.length){
+        if (get_card_name(card) == get_card_name(cards[right])) {
+            right++
+        }
+        else {
+            if (right - left >= 4) {
+                zhadans.push(cards.slice(left, right))
+            }
+            left = right++
+            card = cards[left]
+        }
+    }
+    if ((right - left + 1) >= 4) {
+        zhadans.push(cards.slice(left, right))
+    }
+    return zhadans
+}
+
+
 module.exports = {
     NORMAL_CARDS,
     SPECIAL_CARDS,
@@ -223,5 +248,6 @@ module.exports = {
     get_card_name,
     get_card_rank,
     get_cards_info,
+    get_all_zhadan,
     OutState
 }

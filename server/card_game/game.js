@@ -1,6 +1,7 @@
-const { create_poker, get_cards_value, get_card_name, get_card_rank, SPECIAL_CARDS, OutState } = require("./card.js")
+const { create_poker, get_all_zhadan, get_cards_value, get_card_name, get_card_rank, SPECIAL_CARDS, OutState } = require("./card.js")
 const { Player } = require("./player")
 const { shuffle } = require("../utils")
+const { examples } = require("./test_cards.js")
 
 const NUM_POKERS = 2
 const NUM_PLAYERS = 4
@@ -38,8 +39,13 @@ class ValueCalculator {
         }
     }
 
-    calc() {
+    calc(cards) {
         // TODO: 连炸2222 3333算吗？
+        let zhadans = get_all_zhadan(cards)
+        for (let zhadan of zhadans) {
+            this.update(zhadan, get_cards_value(zhadan))
+        }
+
         const sorted_value_cards = this.normal_value_cards.sort((a, b) => get_card_rank(a[0]) - get_card_rank(b[0]));
         for (let i = 1; i < sorted_value_cards.length; i++) {
             if (get_card_rank(sorted_value_cards[i - 1][0]) === get_card_rank(sorted_value_cards[i][0]) - 1) {
@@ -76,6 +82,7 @@ class Game {
         this.last_valid_cards_info = null
         this.is_start = true
         this.continue_pass_cnts = 0
+        this.friend_card_cnt = 2
     }
 
     get_first_player(last_winner) {
@@ -87,11 +94,11 @@ class Game {
     }
 
     random_split_cards() {
+        // TODO: 测试方便，先不shuffle
         // this.pokers = shuffle(this.pokers)
-        const batch_size = this.pokers.length / NUM_PLAYERS
-        for (let i = 0; i < NUM_PLAYERS; i++) {
+        for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
             this.all_players.push(
-                new Player(this.pokers.slice(i * batch_size, (i + 1) * batch_size), false)
+                new Player(examples["first"][i], false)
             )
         }
     }
@@ -166,21 +173,21 @@ class Game {
     }
 
     get_final_value() {
-        // players_value是赏，normal_score涉及关双还是关单
-        let players_value = Array(NUM_PLAYERS).fill(0)
+        // value_scores是赏，normal_scores涉及关双还是关单
+        let value_scores = Array(NUM_PLAYERS).fill(0)
         let total_value = 0
         for (let i = 0; i < NUM_PLAYERS; i++) {
-            let value = this.player_value_calculator[i].calc()
+            let value = this.player_value_calculator[i].calc(this.all_players[i].cards)
             total_value += value
-            players_value.push(value)
+            value_scores[i] = value
         }
 
-        let normal_score = this.get_score_without_value()
+        let normal_scores = this.get_score_without_value()
         for (let i = 0; i < NUM_PLAYERS; i++) {
-            this.players_score[i] = players_value[i] * (NUM_PLAYERS - 1) - (total_value - players_value[i]) + normal_score[i]
+            this.players_score[i] = value_scores[i] * (NUM_PLAYERS - 1) - (total_value - value_scores[i]) + normal_scores[i]
             this.global_players_score[i] += this.players_score[i]
         }
-        return {players_value, normal_score}
+        return {value_scores, normal_scores}
     }
 
     is_over(){
@@ -193,7 +200,7 @@ class Game {
         return false
     }
 
-    step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state) {
+    step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state, has_friend_card) {
         let show_value_cards = null
         let rank = null
         if (out_state === OutState.VALID) {
@@ -201,6 +208,10 @@ class Game {
             this.last_valid_cards_info = cards_info
             this.last_valid_player_id = curr_player_id
             this.player_value_calculator[curr_player_id].update(raw_cards, cards_value)
+
+            if (has_friend_card) {
+                this.friend_card_cnt -= 1
+            }
 
             this.continue_pass_cnts = 0
 
@@ -228,35 +239,46 @@ class Game {
                     this.winners_order.push(i)
                 }
             }
-            let {players_value, normal_score} = this.get_final_value()
+            let {value_scores, normal_scores} = this.get_final_value()
             return {
                 status: 0,
                 msg: "游戏结束",
-                players_value: players_value,
-                normal_score: normal_score
+                normal_scores: normal_scores,
+                value_scores: value_scores,
+                value_cards: show_value_cards,
+                cards_value: cards_value,
+                rank: rank
             }
         }
         else {
+            let is_friend_help = false
             let next_player_id = (curr_player_id + 1) % NUM_PLAYERS
             while (this.all_players[next_player_id].cards.length == 0) {
                 this.continue_pass_cnts += 1
                 next_player_id = (next_player_id + 1) % NUM_PLAYERS
             }
-            /* TODO: 当上家出完手牌后的逻辑是这样
+            /* 当上家出完手牌后的逻辑是这样
                 如果朋友牌都出了，要是其他人要不起的话，下个出牌人是队友而不是下家
                 如果朋友牌没出，要是其他人要不起的话，则下个出牌人是下家而不是队友
                 如果其他人要的起，那就其他人出，包括队友，所以先过一轮是否要得起，如果过了一轮都没出牌，则按照朋友牌逻辑（即上面的逻辑）出牌
             */
             if(this.continue_pass_cnts >= NUM_PLAYERS - 1){
+                // 如果出完牌了，都要不起，且没有朋友牌了，则下个玩家为朋友
+                if (this.all_players[this.last_valid_player_id].cards.length == 0 && this.friend_card_cnt == 0) {
+                    is_friend_help = true
+                    next_player_id = this.friend_map[this.last_valid_player_id]
+                }
                 this.is_start = true
                 this.continue_pass_cnts = 0
             }
             else{
                 this.is_start = false
             }
-            const is_friend = (out_state == OutState.NO_CARDS) && (this.friend_map[next_player_id] === this.game_state.last_valid_player_id)
+
+
+            // const is_friend = (out_state == OutState.NO_CARDS) && (this.friend_map[next_player_id] === this.game_state.last_valid_player_id)
             // 如果回合结束还是自己 或者 朋友牌已出，当一方出完且下个用户是朋友时重置
-            this.is_start = this.is_start || is_friend
+            // this.is_start = this.is_start || is_friend
 
             if (this.is_start) {
                 this.last_valid_cards_info = null
@@ -267,7 +289,9 @@ class Game {
                 status: 1,
                 msg: "游戏进行中",
                 next_player_id: next_player_id,
+                is_friend_help: is_friend_help,
                 value_cards: show_value_cards,
+                cards_value: cards_value,
                 rank: rank
             }
         }
