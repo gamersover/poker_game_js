@@ -10,11 +10,14 @@ const {logger} = require('./logger')
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    transports: ["websocket"]
+    transports: ["websocket"],
+    cors: {
+        origin: "*",
+    }
 })
 
 
-server.listen(3000, () => {
+server.listen(3001, () => {
     logger.info('服务器启动，监听端口3000');
 });
 
@@ -171,9 +174,17 @@ io.on('connection', (socket) => {
     })
 
     socket.on("disconnect", (data) => {
-        if (socket.player_id == room_data[socket.room_number].room_host_id) {
-            logger.info(`房间${socket.room_number}的房主已退出`)
-            delete room_data[socket.room_number]
+        if (socket.room_number && room_data[socket.room_number]) {
+            if (socket.player_id == room_data[socket.room_number].room_host_id) {
+                // TODO: 房主退出，应该通知其他人并退出房间，还是说再选一个房主？
+                logger.info(`房间${socket.room_number}的房主已退出`)
+                delete room_data[socket.room_number]
+            }
+            else {
+                logger.info(`房间${socket.room_number}的用户${socket.player_name}已退出`)
+                delete room_data[socket.room_number].players_info[socket.player_id]
+                room_data[socket.room_number].all_players_name.splice(room_data[socket.room_number].all_players_name.indexOf(socket.player_name), 1)
+            }
         }
     })
 
