@@ -5,8 +5,15 @@ const utils = require('../utils.js')
 function create_room(room_number, player_name, socket_id) {
     if (room_number === null) {
         room_number = utils.geneRoomNumber()
+        let random_cnt = 0
         while (room_data[room_number]){
             room_number = utils.geneRoomNumber()
+            if (++random_cnt > 100) {
+                return {
+                    status: 0,
+                    msg: "创建失败，房间已满"
+                }
+            }
         }
         let player_id = 0
         room_data[room_number] = {
