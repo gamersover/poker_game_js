@@ -209,7 +209,7 @@ function rank_raw_cards(raw_out_cards) {
     return raw_out_cards
 }
 
-function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_start, cards) {
+function is_valid_out_cards(raw_out_cards, is_pass, last_valid_cards_info, is_start) {
     // if (cards.length == 0){
     //     return { status: 3, msg: "无手牌" }
     // }

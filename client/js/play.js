@@ -1,5 +1,3 @@
-const server_ip = "192.168.3.35"
-
 function getSearchString(key, Url) {
     var str = Url;
     str = str.substring(1, str.length); // 获取URL中?之后的字符（去掉第一位的问号）
@@ -217,7 +215,7 @@ function create_room() {
         alert(`你已在${player_data.room_number}房间，无法创建其他房间`)
     }
     else {
-        socket = io(`ws://${server_ip}:3000`, {
+        socket = io(`ws://localhost:3001`, {
             // 显式指定websocket传输层
             transports: ['websocket']
         });
@@ -263,7 +261,7 @@ function join_room() {
         alert(`你已在${player_data.room_number}房间，无法加入其他房间`)
     }
     else if (/^[0-9]{6}$/.exec(player_data.inputed_room_number)) {
-        socket = io('ws://localhost:3000', {
+        socket = io('ws://localhost:3001', {
             // 显式指定websocket传输层
             transports: ['websocket']
         });
@@ -414,7 +412,7 @@ function game_step() {
             }
         })
 
-        let result = is_valid_out_cards(raw_out_cards, false, player_data.last_valid_cards_info, player_data.is_start, player_data.all_cards)
+        let result = is_valid_out_cards(raw_out_cards, false, player_data.last_valid_cards_info, player_data.is_start)
         if (result.status === -1) {
             alert(result.msg)
         }

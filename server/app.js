@@ -21,7 +21,7 @@ server.listen(3001, () => {
     logger.info('服务器启动，监听端口3000');
 });
 
-
+// TODO: 服务端emit的时候不应该只是发送一些杂数据，而应该处理后包装在一个players_info里面，不要扔到客户端再去计算出players_info
 io.on('connection', (socket) => {
     logger.info("新用户连接")
 
@@ -181,6 +181,7 @@ io.on('connection', (socket) => {
                 delete room_data[socket.room_number]
             }
             else {
+                // TODO: 其他用户退出，需要emit给剩余用户
                 logger.info(`房间${socket.room_number}的用户${socket.player_name}已退出`)
                 delete room_data[socket.room_number].players_info[socket.player_id]
                 room_data[socket.room_number].all_players_name.splice(room_data[socket.room_number].all_players_name.indexOf(socket.player_name), 1)
