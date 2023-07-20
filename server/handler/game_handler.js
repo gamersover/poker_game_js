@@ -1,5 +1,5 @@
-const room_data = require('../data/room_data')
-const {Game} = require('../card_game/game')
+import room_data from '../data/room_data.js'
+import Game from '../card_game/game.js'
 
 
 function init_game(room_number) {
@@ -32,5 +32,7 @@ function game_step(room_number, curr_player_id, raw_cards, cards_info, cards_val
     return result
 }
 
-exports.init_game = init_game
-exports.game_step = game_step
+export {
+    init_game,
+    game_step
+}

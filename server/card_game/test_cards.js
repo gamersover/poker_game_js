@@ -1,4 +1,4 @@
-exports.examples = {
+const examples = {
     "first": [
         [
             "3_红桃", "3_红桃", "3_梅花", "3_梅花", "3_黑桃", "3_黑桃", "3_方块", "3_方块",
@@ -26,3 +26,6 @@ exports.examples = {
         ]
     ],
 }
+
+
+export default examples;

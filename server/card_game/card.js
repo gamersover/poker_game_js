@@ -93,7 +93,7 @@ function get_card_color(card) {
 
 function create_poker(num_pokers) {
     // num_pokers: 牌的副数
-    all_cards = []
+    let all_cards = []
     NORMAL_CARDS.forEach(element => {
         for (let color in COLORS) {
             all_cards.push(element + "_" + color)
@@ -239,7 +239,7 @@ function get_all_zhadan(cards) {
 }
 
 
-module.exports = {
+export {
     NORMAL_CARDS,
     SPECIAL_CARDS,
     CARDS_RANK,

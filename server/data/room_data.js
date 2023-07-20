@@ -1,4 +1,4 @@
-module.exports = {
+const room_data = {
     game_name: "找朋友",
     "01": {
         room_host_id: 0,
@@ -13,3 +13,5 @@ module.exports = {
         all_players_name: ["p1"]
     }
 }
+
+export default room_data

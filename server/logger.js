@@ -1,4 +1,4 @@
-const pino = require('pino')
+import pino from 'pino'
 
 
 // const { join } = require('path');
@@ -18,4 +18,5 @@ const logger = pino({
 })
 
 
-exports.logger = logger
+const _logger = logger
+export { _logger as logger }

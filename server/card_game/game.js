@@ -1,10 +1,20 @@
-const { create_poker, get_all_zhadan, get_cards_value, get_card_name, get_card_rank, SPECIAL_CARDS, OutState } = require("./card.js")
-const { Player } = require("./player")
-const { shuffle } = require("../utils")
-const { examples } = require("./test_cards.js")
+import { create_poker, get_all_zhadan, get_cards_value, get_card_name, get_card_rank, SPECIAL_CARDS, OutState } from "./card.js"
+import Player from "./player.js"
+import utils from "../utils.js"
+import examples from "./test_cards.js"
+
+const GameState = {
+    "OutGame": 0,
+    "InGame": 1,
+    "Prepared": 2,
+    "GameStart": 3, // or RoundEnd
+    "RoundStart": 4,
+    "RoundSkip": 5,
+}
 
 const NUM_POKERS = 2
 const NUM_PLAYERS = 4
+
 
 class ValueCalculator {
     constructor(init_cards) {
@@ -95,7 +105,7 @@ class Game {
 
     random_split_cards() {
         // TODO: 测试方便，先不shuffle
-        // this.pokers = shuffle(this.pokers)
+        // this.pokers = utils.shuffle(this.pokers)
         for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
             this.all_players.push(
                 new Player(examples["first"][i], false)
@@ -201,7 +211,7 @@ class Game {
     }
 
     step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state, has_friend_card) {
-        let show_value_cards = null
+        let show_value_cards = null, joker_cards = null
         let rank = null
         if (out_state === OutState.VALID) {
             this.all_players[curr_player_id].cards = all_cards
@@ -223,10 +233,12 @@ class Game {
             if (cards_value > 0) {
                 // 有赏，就全部返回，包括王
                 show_value_cards = raw_cards
+                joker_cards = raw_cards.filter(card => SPECIAL_CARDS.has(card))
             }
             else if (raw_cards.some(card => SPECIAL_CARDS.has(card))) {
                 // 无赏，就只返回王
                 show_value_cards = raw_cards.filter(card => SPECIAL_CARDS.has(card))
+                joker_cards = show_value_cards
             }
         }
         else if (out_state === OutState.PASS) {
@@ -291,7 +303,9 @@ class Game {
                 next_player_id: next_player_id,
                 is_friend_help: is_friend_help,
                 value_cards: show_value_cards,
+                joker_cards: joker_cards,
                 cards_value: cards_value,
+                value_scores: this.player_value_calculator[curr_player_id].value,
                 rank: rank
             }
         }
@@ -299,6 +313,7 @@ class Game {
 
 }
 
-module.exports = {
-    Game
+export default Game;
+export {
+    GameState
 }

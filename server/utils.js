@@ -1,4 +1,4 @@
-exports.geneRoomNumber = (size = 6) => {
+const geneRoomNumber = (size = 6) => {
   return "000000" /*TODO: 测试房间号*/
   let room_number = ''
   for (let i = 0; i < size; i++) {
@@ -7,7 +7,7 @@ exports.geneRoomNumber = (size = 6) => {
   return room_number
 }
 
-exports.shuffle = (array) => {
+const shuffle = (array) => {
   let currentIndex = array.length, randomIndex;
 
   // While there remain elements to shuffle.
@@ -23,4 +23,10 @@ exports.shuffle = (array) => {
   }
 
   return array;
+}
+
+
+export default {
+  geneRoomNumber,
+  shuffle
 }

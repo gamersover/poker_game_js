@@ -1,4 +1,4 @@
-const {get_cards_info, NORMAL_CARDS, SPECIAL_CARDS, get_card_rank, CARDS_RANK} = require('./card')
+import {get_cards_info, NORMAL_CARDS, SPECIAL_CARDS, get_card_rank, CARDS_RANK} from './card.js'
 
 
 class Player{
@@ -26,6 +26,4 @@ class Player{
     }
 }
 
-module.exports = {
-    Player
-}
+export default Player;

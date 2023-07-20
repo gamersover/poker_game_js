@@ -1,5 +1,6 @@
-const room_data = require('../data/room_data')
-const utils = require('../utils.js')
+import room_data from '../data/room_data.js'
+import utils from '../utils.js'
+import { GameState } from '../card_game/game.js'
 
 
 function create_room(room_number, player_name, socket_id) {
@@ -24,16 +25,17 @@ function create_room(room_number, player_name, socket_id) {
         }
 
         room_data[room_number].players_info[player_id] = {
-            state: 0,
+            state: GameState.InGame,
             player_name: player_name,
             socket_id: socket_id,
         }
         return {
             status: 1,
             msg: `创建房间成功`,
-            room_number: room_number,
-            host_id: room_data[room_number].room_host_id,
-            player_name: player_name,
+            room_info: {
+                room_number: room_number,
+                host_id: room_data[room_number].room_host_id,
+            },
             player_id: player_id,
             players_info: room_data[room_number].players_info
         }
@@ -46,10 +48,22 @@ function create_room(room_number, player_name, socket_id) {
 
 function join_room(room_number, player_name, socket_id){
     if (!room_data[room_number]) {
-        return {status: 0, msg: "房间未创建，无法加入", room_number: room_number}
+        return {
+            status: 0,
+            msg: "房间未创建，无法加入",
+            room_info: {
+                room_number: room_number
+            }
+        }
     }
     if (room_data[room_number].all_players_name.length == 4) {
-        return {status: 0, msg: "该房间已满，无法进入！", room_number: room_number}
+        return {
+            status: 0,
+            msg: "该房间已满，无法进入！",
+            room_info: {
+                room_number: room_number
+            }
+        }
     }
 
     let n = 1
@@ -64,7 +78,7 @@ function join_room(room_number, player_name, socket_id){
     for (; player_id < 4; player_id++){
         if (!room_data[room_number].players_info[player_id]){
             room_data[room_number].players_info[player_id] = {
-                state: 0,
+                state: GameState.InGame,
                 player_name: player_name,
                 socket_id: socket_id,
             }
@@ -76,9 +90,10 @@ function join_room(room_number, player_name, socket_id){
     return {
         status: 1,
         msg: `玩家${player_name}进入房间${room_number}`,
-        room_number: room_number,
-        host_id: room_data[room_number].room_host_id,
-        player_name: player_name,
+        room_info: {
+            room_number: room_number,
+            host_id: room_data[room_number].room_host_id,
+        },
         player_id: player_id,
         players_info: room_data[room_number].players_info
     }
@@ -97,26 +112,25 @@ function prepare_start(room_number, player_name, player_id) {
             msg: `用户${player_name}不在房间${room_number}内`
         }
     }
-    else if (room_data[room_number].players_info[player_id].state == 1){
+    else if (room_data[room_number].players_info[player_id].state == GameState.Prepared){
         return {
             status: 0,
             msg: `用户${player_name}已在房间${room_number}准备`
         }
     }
     else {
-        room_data[room_number].players_info[player_id].state = 1
+        room_data[room_number].players_info[player_id].state = GameState.Prepared
         room_data[room_number].prepared_cnt += 1
         return {
             status: 1,
-            msg: `玩家${player_name}已准备，${room_data[room_number].prepared_cnt} / 4`,
-            // room_number: room_number,
-            // player_name: player_name,
             player_id: player_id,
             players_info: room_data[room_number].players_info
         }
     }
 }
 
-exports.create_room = create_room
-exports.join_room = join_room
-exports.prepare_start = prepare_start
+export {
+    create_room,
+    join_room,
+    prepare_start
+}
