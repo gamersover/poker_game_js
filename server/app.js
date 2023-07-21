@@ -119,7 +119,6 @@ io.on('connection', (socket) => {
             data.cards_value,
             data.all_cards,
             data.out_state,
-            data.has_friend_card
         )
         let game = room_data[socket.room_number].game
         let players_info = room_data[socket.room_number].players_info
@@ -138,21 +137,13 @@ io.on('connection', (socket) => {
                 players_info[socket.player_id].valid_cards = data.raw_out_cards
                 players_info[socket.player_id].cards_value = result.cards_value
                 players_info[socket.player_id].value_cards = result.value_cards || null
-                if (!players_info[socket.player_id].all_joker_cards) {
-                    players_info[socket.player_id].all_joker_cards = []
-                }
-                if (result.joker_cards) {
-                    players_info[socket.player_id].all_joker_cards = [
-                        ...players_info[socket.player_id].all_joker_cards,
-                        ...result.joker_cards
-                    ]
-                }
+                players_info[socket.player_id].joker_cards = result.joker_cards
                 players_info[socket.player_id].rank = result.rank
                 io.to(socket.room_number).emit("game_step_global", {
                     status: 1,
                     game_info: {
                         curr_player_id: next_player_id,
-                        has_friend_card: data.has_friend_card,
+                        friend_card_cnt: game.friend_card_cnt,
                         is_friend_help: result.is_friend_help
                     },
                     players_info: players_info
@@ -168,6 +159,7 @@ io.on('connection', (socket) => {
                     status: 2,
                     game_info: {
                         curr_player_id: next_player_id,
+                        friend_card_cnt: game.friend_card_cnt,
                     },
                     players_info: players_info
                 })

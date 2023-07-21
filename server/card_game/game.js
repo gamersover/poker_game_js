@@ -210,7 +210,7 @@ class Game {
         return false
     }
 
-    step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state, has_friend_card) {
+    step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state) {
         let show_value_cards = null, joker_cards = null
         let rank = null
         if (out_state === OutState.VALID) {
@@ -218,6 +218,8 @@ class Game {
             this.last_valid_cards_info = cards_info
             this.last_valid_player_id = curr_player_id
             this.player_value_calculator[curr_player_id].update(raw_cards, cards_value)
+
+            const has_friend_card = raw_cards.some((card) => card == this.friend_card)
 
             if (has_friend_card) {
                 this.friend_card_cnt -= 1

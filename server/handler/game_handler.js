@@ -27,8 +27,8 @@ function init_game(room_number) {
     }
 }
 
-function game_step(room_number, curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state, has_friend_card){
-    const result = room_data[room_number].game.step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state, has_friend_card)
+function game_step(room_number, curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state){
+    const result = room_data[room_number].game.step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state)
     return result
 }
 
