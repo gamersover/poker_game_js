@@ -10,6 +10,7 @@ const GameState = {
     "GameStart": 3, // or RoundEnd
     "RoundStart": 4,
     "RoundSkip": 5,
+    "PlayerEnd": 6
 }
 
 const NUM_POKERS = 2

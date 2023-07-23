@@ -133,7 +133,7 @@ io.on('connection', (socket) => {
 
             if (data.out_state === OutState.VALID) {
                 // 游戏出牌状态发给所有用户
-                players_info[socket.player_id].state = GameState.GameStart
+                players_info[socket.player_id].state = result.rank ? GameState.PlayerEnd : GameState.GameStart
                 players_info[socket.player_id].valid_cards = data.raw_out_cards
                 players_info[socket.player_id].cards_value = result.cards_value
                 players_info[socket.player_id].value_cards = result.value_cards || null
