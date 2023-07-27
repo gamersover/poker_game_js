@@ -10,7 +10,8 @@ const GameState = {
     "GameStart": 3, // or RoundEnd
     "RoundStart": 4,
     "RoundSkip": 5,
-    "PlayerEnd": 6
+    "PlayerEnd": 6,
+    "GameEnd": 7
 }
 
 const NUM_POKERS = 2
@@ -71,13 +72,14 @@ class ValueCalculator {
 class Game {
     constructor() {
         this.pokers = create_poker(NUM_POKERS)
-        this.all_players = []
         this.num_rounds = 0
         this.global_players_score = Array(NUM_PLAYERS).fill(0)  // 全局得分
         this.init(null)
     }
 
     init(last_winner) {
+        this.all_players = []
+
         this.players_score = Array(NUM_PLAYERS).fill(0)   // 当前局得分
         this.winners_order = []
         this.first_player_id = -1
@@ -254,6 +256,7 @@ class Game {
                     this.winners_order.push(i)
                 }
             }
+            console.log("game over..")
             let {value_scores, normal_scores} = this.get_final_value()
             return {
                 status: 0,
@@ -308,7 +311,6 @@ class Game {
                 value_cards: show_value_cards,
                 joker_cards: joker_cards,
                 cards_value: cards_value,
-                value_scores: this.player_value_calculator[curr_player_id].value,
                 rank: rank
             }
         }

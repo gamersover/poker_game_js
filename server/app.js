@@ -22,7 +22,6 @@ server.listen(PORT, () => {
     logger.info(`服务器启动，监听端口${PORT}`);
 });
 
-// TODO: 服务端emit的时候不应该只是发送一些杂数据，而应该处理后包装在一个players_info里面，不要扔到客户端再去计算出players_info
 io.on('connection', (socket) => {
     logger.info("新用户连接")
 
@@ -50,7 +49,7 @@ io.on('connection', (socket) => {
             socket.room_number = result.room_info.room_number
             logger.info(`房间${socket.room_number}：用户${socket.player_name}加入成功`)
             socket.emit("join_room", result)
-            socket.to(result.room_info.room_number).emit("join_room_others", result)
+            io.to(socket.room_number).emit("join_room_global", result)
         }
         else {
             logger.info(`房间${data.room_number}：用户${data.player_name}加入失败`)
@@ -129,7 +128,6 @@ io.on('connection', (socket) => {
 
             players_info[next_player_id].state = GameState.RoundStart
             players_info[socket.player_id].num_cards = num_cards
-            players_info[socket.player_id].value_scores = result.value_scores
 
             if (data.out_state === OutState.VALID) {
                 // 游戏出牌状态发给所有用户
@@ -172,32 +170,50 @@ io.on('connection', (socket) => {
             })
         }
         else if (result.status == 0) {
-            let game_result = []
             for (let i of game.winners_order) {
-                game_result.push({
-                    player_id: i,
-                    player_name: room_data[socket.room_number].players_info[i].player_name,
-                    // winners_order: winners_order,
-                    value_score: result.value_scores[i],   // 讨赏值
-                    normal_score: result.normal_scores[i], // 关双关单
-                    final_score: game.players_score[i], // 最终得分
-                    global_score: game.global_players_score[i]  // 多局游戏总得分
-                })
+                // TODO: 每个用户的赏牌也要发过去
+                players_info[i].value_score = result.value_scores[i]
+                players_info[i].normal_score = result.normal_scores[i]
+                players_info[i].final_score = game.players_score[i]
+                players_info[i].global_score = game.global_players_score[i]
+                players_info[i].state = GameState.GameEnd
+                players_info[i].num_cards = game.all_players[i].cards.length
+                players_info[i].valid_cards = game.all_players[i].cards
             }
-
-            io.to(socket.room_number).emit("game_over_global", {
-                status: 1,
-                last_valid_cards: data.raw_out_cards,
-                last_player_id: socket.player_id,
-                last_player_num_cards: 0,
-                value_cards: result.value_cards || null,
-                cards_value: result.cards_value,
-                has_friend_card: data.has_friend_card,
-                rank: result.rank,
-                // winners_order: winners_order,
-                game_result: game_result
+            io.to(socket.room_number).emit("game_step_global", {
+                status: 3,
+                game_info: {
+                    friend_card_cnt: game.friend_card_cnt,
+                    winners_order: game.winners_order
+                },
+                players_info
             })
         }
+    })
+
+    socket.on("next_round", ()=>{
+        let this_room_data = room_data[socket.room_number]
+        this_room_data.prepared_cnt = 0
+        let players_info = this_room_data.players_info
+        console.log(players_info)
+        const {player_name, socket_id, global_score} = players_info[socket.player_id]
+        players_info[socket.player_id] = {
+            state: GameState.InGame,
+            player_name,
+            socket_id,
+            global_score,
+            all_cards: []
+        }
+
+        socket.emit("join_room_global", {
+            status: 1,
+            msg: `玩家${player_name}在房间${socket.room_number}准备下一轮`,
+            room_info: {
+                host_id: this_room_data.room_host_id,
+            },
+            player_id: socket.player_id,
+            players_info: players_info
+        })
     })
 
     socket.on("disconnect", (data) => {

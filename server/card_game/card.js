@@ -173,7 +173,6 @@ function get_cards_info(cards) {
 function get_cards_value(raw_cards) {
     // 判断出牌的赏钱
     let value = 0;
-
     // 四个王
     if (raw_cards.length === 4 && raw_cards.every(card => SPECIAL_CARDS.includes(card))) {
         value = 4;
