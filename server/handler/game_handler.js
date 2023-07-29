@@ -11,6 +11,7 @@ function init_game(room_number) {
             room_data[room_number].game = new Game()
         }
         let game = room_data[room_number].game
+        game.init(null)
         return {
             status: 1,
             msg: "开始游戏",

@@ -74,7 +74,6 @@ class Game {
         this.pokers = create_poker(NUM_POKERS)
         this.num_rounds = 0
         this.global_players_score = Array(NUM_PLAYERS).fill(0)  // 全局得分
-        this.init(null)
     }
 
     init(last_winner) {
@@ -256,7 +255,6 @@ class Game {
                     this.winners_order.push(i)
                 }
             }
-            console.log("game over..")
             let {value_scores, normal_scores} = this.get_final_value()
             return {
                 status: 0,

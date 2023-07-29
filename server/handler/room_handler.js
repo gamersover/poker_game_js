@@ -121,6 +121,9 @@ function prepare_start(room_number, player_name, player_id) {
     else {
         room_data[room_number].players_info[player_id].state = GameState.Prepared
         room_data[room_number].prepared_cnt += 1
+        if (room_data[room_number].prepared_cnt == 5){
+            room_data[room_number].prepared_cnt = 1
+        }
         return {
             status: 1,
             player_id: player_id,

@@ -61,27 +61,31 @@ io.on('connection', (socket) => {
         let result = prepare_start(socket.room_number, socket.player_name, socket.player_id)
         if (result.status == 1) {
             logger.info(`房间${socket.room_number}：用户${socket.player_name}已准备`)
-            socket.emit("prepare_start", result)
-            io.to(socket.room_number).emit("prepare_start_global", result)
-
             const this_room_data = room_data[socket.room_number]
+            const players_info = this_room_data.players_info
+            for(let player_id in players_info) {
+                if (players_info[player_id].state == GameState.InGame
+                    || players_info[player_id].state == GameState.Prepared){
+                    io.to(players_info[player_id].socket_id).emit("prepare_start_global", result)
+                }
+            }
 
             if (this_room_data.prepared_cnt == 4) {
                 let game_data = init_game(socket.room_number)
                 if (game_data.status == 1) {
                     // 给首个出牌用户发送，上一次游戏状态
-                    io.to(this_room_data.players_info[game_data.first_player_id].socket_id)
+                    io.to(players_info[game_data.first_player_id].socket_id)
                         .emit("game_step", {
                             last_valid_cards_info: game_data.last_valid_cards_info,
                             is_start: game_data.is_start,
                         })
 
-                    for(let i in this_room_data.players_info) {
+                    for(let i in players_info) {
                         if (i == game_data.first_player_id) {
-                            this_room_data.players_info[i].state = GameState.RoundStart
+                            players_info[i].state = GameState.RoundStart
                         }
                         else {
-                            this_room_data.players_info[i].state = GameState.GameStart
+                            players_info[i].state = GameState.GameStart
                         }
                     }
 
@@ -193,27 +197,30 @@ io.on('connection', (socket) => {
 
     socket.on("next_round", ()=>{
         let this_room_data = room_data[socket.room_number]
-        this_room_data.prepared_cnt = 0
         let players_info = this_room_data.players_info
-        console.log(players_info)
         const {player_name, socket_id, global_score} = players_info[socket.player_id]
         players_info[socket.player_id] = {
             state: GameState.InGame,
             player_name,
             socket_id,
             global_score,
-            all_cards: []
         }
 
-        socket.emit("join_room_global", {
-            status: 1,
-            msg: `玩家${player_name}在房间${socket.room_number}准备下一轮`,
-            room_info: {
-                host_id: this_room_data.room_host_id,
-            },
-            player_id: socket.player_id,
-            players_info: players_info
-        })
+        // 只给已经触发了next_round的玩家发送
+        for(let player_id in players_info) {
+            if (players_info[player_id].state == GameState.InGame
+                || players_info[player_id].state == GameState.Prepared){
+                io.to(players_info[player_id].socket_id).emit("join_room_global", {
+                    status: 1,
+                    msg: `玩家${player_name}在房间${socket.room_number}准备下一轮`,
+                    room_info: {
+                        host_id: this_room_data.room_host_id,
+                    },
+                    player_id: socket.player_id,
+                    players_info: players_info
+                })
+            }
+        }
     })
 
     socket.on("disconnect", (data) => {
