@@ -1,9 +1,16 @@
-import {get_cards_info, NORMAL_CARDS, SPECIAL_CARDS, get_card_rank, CARDS_RANK} from './card.js'
+import {get_card_rank, get_card_color} from './card.js'
 
 
 class Player{
     constructor(cards, is_robot=false){
-        this.cards = cards.sort((a, b) => get_card_rank(a) - get_card_rank(b))
+        this.cards = cards.sort((a, b) => {
+            if (get_card_rank(a) !== get_card_rank(b)) {
+                return get_card_rank(a) - get_card_rank(b)
+            }
+            else {
+                return get_card_color(a) > get_card_color(b) ? 1 : -1
+            }
+        })
         this.is_robot = is_robot
     }
 

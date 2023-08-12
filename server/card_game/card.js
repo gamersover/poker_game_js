@@ -26,7 +26,7 @@ const CardsType = {
     DUIZI: 2,
     FEIJI: 3,
     SHUNZI: 4,
-    LIANDU: 5,
+    LIANDUI: 5,
     ZHADAN: 6
 }
 
@@ -128,6 +128,10 @@ function get_cards_info(cards) {
         return new CardsInfo(CardsType.FEIJI, first_card_rank, cards_len)
     }
 
+    if (cards_len == 3 && cards.every(card => SPECIAL_CARDS.has(get_card_name(card)))) {
+        return new CardsInfo(CardsType.FEIJI, CARDS_RANK['XW'], cards_len);
+    }
+
     if (cards_len >= 4 && cards_len <= 8 && cards.every(card => get_card_name(card) == first_card_name)) {
         return new CardsInfo(CardsType.ZHADAN, first_card_rank, cards_len);
     }
@@ -160,7 +164,7 @@ function get_cards_info(cards) {
             if (step == 1) {
                 return new CardsInfo(CardsType.SHUNZI, first_card_rank, cards_len);
             } else {
-                return new CardsInfo(CardsType.LIANDU, first_card_rank, cards_len);
+                return new CardsInfo(CardsType.LIANDUI, first_card_rank, cards_len);
             }
         } else {
             return new CardsInfo(CardsType.NOT_VALID);
@@ -248,5 +252,6 @@ export {
     get_card_rank,
     get_cards_info,
     get_all_zhadan,
-    OutState
+    OutState,
+    get_card_color
 }

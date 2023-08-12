@@ -1,9 +1,8 @@
 import { create_poker, get_all_zhadan, get_cards_value, get_card_name, get_card_rank, SPECIAL_CARDS, OutState } from "./card.js"
 import Player from "./player.js"
-import utils from "../utils.js"
 import examples from "./test_cards.js"
 
-const GameState = {
+const PlayerState = {
     "OutGame": 0,
     "InGame": 1,
     "Prepared": 2,
@@ -11,7 +10,14 @@ const GameState = {
     "RoundStart": 4,
     "RoundSkip": 5,
     "PlayerEnd": 6,
-    "GameEnd": 7
+    "GameEnd": 7,
+    "GameExit": 8
+}
+
+const GameState = {
+    "GameNotStart": 0,
+    "GameStart": 1,
+    "GameStop": 2,
 }
 
 const NUM_POKERS = 2
@@ -72,7 +78,7 @@ class ValueCalculator {
 class Game {
     constructor() {
         this.pokers = create_poker(NUM_POKERS)
-        this.num_rounds = 0
+        this.num_games = 0
         this.global_players_score = Array(NUM_PLAYERS).fill(0)  // 全局得分
     }
 
@@ -81,16 +87,16 @@ class Game {
 
         this.players_score = Array(NUM_PLAYERS).fill(0)   // 当前局得分
         this.winners_order = []
-        this.first_player_id = -1
+        this.curr_player_id = -1
 
-        this.num_rounds += 1
+        this.num_games += 1
 
         // 发牌
         this.deal(last_winner)
 
         this.player_value_calculator = Array(NUM_PLAYERS).fill().map((_, i) => new ValueCalculator(this.all_players[i].cards));
 
-        this.last_valid_player_id = this.first_player_id
+        this.last_valid_player_id = this.curr_player_id
         this.last_valid_cards_info = null
         this.is_start = true
         this.continue_pass_cnts = 0
@@ -99,15 +105,21 @@ class Game {
 
     get_first_player(last_winner) {
         if (last_winner === null) {
-            this.first_player_id = Math.floor(Math.random() * NUM_PLAYERS);
+            this.curr_player_id = Math.floor(Math.random() * NUM_PLAYERS);
         } else {
-            this.first_player_id = last_winner;
+            this.curr_player_id = last_winner;
         }
     }
 
     random_split_cards() {
-        // TODO: 测试方便，先不shuffle
         // this.pokers = utils.shuffle(this.pokers)
+        // const num_cards_per_player = this.pokers.length / NUM_PLAYERS
+        // for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
+        //     this.all_players.push(
+        //         new Player(this.pokers.slice(i*num_cards_per_player, (i+1)*num_cards_per_player), false)
+        //     )
+        // }
+        // TODO: 测试方便，先不shuffle
         for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
             this.all_players.push(
                 new Player(examples["first"][i], false)
@@ -116,18 +128,18 @@ class Game {
     }
 
     get_friend_info() {
-        this.friend_card = this.all_players[this.first_player_id].select_friend_card()
+        this.friend_card = this.all_players[this.curr_player_id].select_friend_card()
         this.friend_map = {}
 
         let other_id1 = null
         let other_id2 = null
         for (let i = 0; i < NUM_PLAYERS; i++) {
-            if (i == this.first_player_id) {
+            if (i == this.curr_player_id) {
                 continue
             }
             else if (this.all_players[i].contain_friend_card(this.friend_card)) {
-                this.friend_map[i] = this.first_player_id
-                this.friend_map[this.first_player_id] = i
+                this.friend_map[i] = this.curr_player_id
+                this.friend_map[this.curr_player_id] = i
             }
             else{
                 if (other_id1 === null) {
@@ -268,8 +280,10 @@ class Game {
         }
         else {
             let is_friend_help = false
-            let next_player_id = (curr_player_id + 1) % NUM_PLAYERS
+            let next_player_id = (parseInt(curr_player_id) + 1) % NUM_PLAYERS
+            console.log("calc", next_player_id)
             while (this.all_players[next_player_id].cards.length == 0) {
+                console.log(this.all_players[next_player_id].cards)
                 this.continue_pass_cnts += 1
                 next_player_id = (next_player_id + 1) % NUM_PLAYERS
             }
@@ -279,6 +293,7 @@ class Game {
                 如果其他人要的起，那就其他人出，包括队友，所以先过一轮是否要得起，如果过了一轮都没出牌，则按照朋友牌逻辑（即上面的逻辑）出牌
             */
             if(this.continue_pass_cnts >= NUM_PLAYERS - 1){
+                console.log(this.continue_pass_cnts)
                 // 如果出完牌了，都要不起，且没有朋友牌了，则下个玩家为朋友
                 if (this.all_players[this.last_valid_player_id].cards.length == 0 && this.friend_card_cnt == 0) {
                     is_friend_help = true
@@ -318,5 +333,6 @@ class Game {
 
 export default Game;
 export {
+    PlayerState,
     GameState
 }

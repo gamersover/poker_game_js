@@ -17,10 +17,9 @@ function init_game(room_number) {
             msg: "开始游戏",
             all_players: game.all_players,
             friend_card: game.friend_card,
-            first_player_id: game.first_player_id,
-            first_player_name: room_data[room_number].players_info[game.first_player_id].player_name,
+            curr_player_id: game.curr_player_id,
             is_start: game.is_start,
-            num_rounds: game.num_rounds
+            num_games: game.num_games
         }
     }
     else{

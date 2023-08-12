@@ -10,7 +10,8 @@ const room_data = {
             }
         },   // 玩家信息
         prepared_cnt: 0,
-        all_players_name: ["p1"]
+        all_players_name: ["p1"],
+        state: 0
     }
 }
 
