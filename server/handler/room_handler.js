@@ -197,6 +197,7 @@ function join_room_second(room_number, player_id, player_name, player_avatar, so
                 friend_card_cnt: game.friend_card_cnt,
                 is_start: game.is_start,
                 num_games: game.num_games,
+                winners_order: game.winners_order
             },
             player_id: new_player_id,
             all_cards: game.all_players[new_player_id].cards,

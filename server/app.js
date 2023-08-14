@@ -92,6 +92,7 @@ io.on('connection', (socket) => {
                     friend_card_cnt: result.game_info.friend_card_cnt,
                     num_games: result.game_info.num_games,
                     room_number: result.game_info.room_number,
+                    winners_order: result.game_info.winners_order
                 },
                 players_info: result.players_info,
                 user_info: {
@@ -197,12 +198,32 @@ io.on('connection', (socket) => {
             players_info[socket.player_id].num_cards = num_cards
             players_info[socket.player_id].num_rounds += 1
 
+            const last_cards_value = players_info[next_player_id].curr_cards_value || 0
+            players_info[next_player_id].total_cards_value += last_cards_value
+            players_info[next_player_id].curr_cards_value = 0
+            if (players_info[next_player_id].value_cards) {
+                players_info[next_player_id].show_value_cards = [...players_info[next_player_id].value_cards]
+            }
+            else {
+                players_info[next_player_id].show_value_cards = []
+            }
+
             if (data.out_state === OutState.VALID) {
                 // 游戏出牌状态发给所有用户
                 players_info[socket.player_id].state = result.rank ? PlayerState.PlayerEnd : PlayerState.GameStart
                 players_info[socket.player_id].valid_cards = data.raw_out_cards
-                players_info[socket.player_id].cards_value = result.cards_value
-                players_info[socket.player_id].value_cards = result.value_cards || null
+
+                if (typeof(players_info[socket.player_id].total_cards_value) === 'undefined') {
+                    players_info[socket.player_id].total_cards_value = 0
+                }
+                players_info[socket.player_id].curr_cards_value = result.cards_value
+
+                if (!players_info[socket.player_id].value_cards) {
+                    players_info[socket.player_id].value_cards = []
+                }
+                if (result.value_cards) {
+                    players_info[socket.player_id].value_cards.push(result.value_cards)
+                }
                 players_info[socket.player_id].joker_cards = result.joker_cards
                 players_info[socket.player_id].rank = result.rank
 
@@ -239,8 +260,8 @@ io.on('connection', (socket) => {
             })
         }
         else if (result.status == 0) {
+            console.log(game.winners_order)
             for (let i of game.winners_order) {
-                // TODO: 每个用户的赏牌也要发过去
                 players_info[i].value_score = result.value_scores[i]
                 players_info[i].normal_score = result.normal_scores[i]
                 players_info[i].final_score = game.players_score[i]
@@ -263,12 +284,13 @@ io.on('connection', (socket) => {
     socket.on("next_round", () => {
         let this_room_data = room_data[socket.room_number]
         let players_info = this_room_data.players_info
-        const { player_name, socket_id, global_score } = players_info[socket.player_id]
+        const { player_name, socket_id, global_score, player_avatar } = players_info[socket.player_id]
         players_info[socket.player_id] = {
             state: PlayerState.InGame,
             player_name,
             socket_id,
             global_score,
+            player_avatar
         }
 
         // 只给已经触发了next_round的玩家发送
