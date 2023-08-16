@@ -12,7 +12,7 @@ const logPath = join('app.log');
 const logger = pino({
     level: 'info',
     timestamp: () => `,"time":${new Date().toLocaleString()}`
-}, pino.destination(logPath))
+})
 
 
 const _logger = logger
