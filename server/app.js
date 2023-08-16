@@ -22,6 +22,10 @@ server.listen(PORT, () => {
     logger.info(`服务器启动，监听端口${PORT}`);
 });
 
+app.get("/", (req, res) => {
+    res.send("服务启动中。。。");
+})
+
 io.on('connection', (socket) => {
     logger.info("新用户连接")
 

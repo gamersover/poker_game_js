@@ -1,9 +1,6 @@
 import pino from 'pino'
-
-
-// const { join } = require('path');
-
-// const logPath = join(__dirname, 'logs', 'app.log');
+import { join } from 'path';
+const logPath = join('app.log');
 
 // const logger = pino({
 //   level: 'info',
@@ -15,7 +12,7 @@ import pino from 'pino'
 const logger = pino({
     level: 'info',
     timestamp: () => `,"time":${new Date().toLocaleString()}`
-})
+}, pino.destination(logPath))
 
 
 const _logger = logger
