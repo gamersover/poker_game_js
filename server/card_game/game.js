@@ -113,19 +113,19 @@ class Game {
     }
 
     random_split_cards() {
-        this.pokers = utils.shuffle(this.pokers)
-        const num_cards_per_player = this.pokers.length / NUM_PLAYERS
-        for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
-            this.all_players.push(
-                new Player(this.pokers.slice(i*num_cards_per_player, (i+1)*num_cards_per_player), false)
-            )
-        }
-        // TODO: 测试方便，先不shuffle
+        // this.pokers = utils.shuffle(this.pokers)
+        // const num_cards_per_player = this.pokers.length / NUM_PLAYERS
         // for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
         //     this.all_players.push(
-        //         new Player(examples["first"][i], false)
+        //         new Player(this.pokers.slice(i*num_cards_per_player, (i+1)*num_cards_per_player), false)
         //     )
         // }
+        // TODO: 测试方便，先不shuffle
+        for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
+            this.all_players.push(
+                new Player(examples["first"][i], false)
+            )
+        }
     }
 
     get_friend_info() {
@@ -227,6 +227,7 @@ class Game {
 
     step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state) {
         let show_value_cards = null, joker_cards = null
+        let send_friend_map = false
         let rank = null
         if (out_state === OutState.VALID) {
             this.all_players[curr_player_id].cards = all_cards
@@ -238,6 +239,9 @@ class Game {
 
             if (has_friend_card) {
                 this.friend_card_cnt -= 1
+                if (this.friend_card_cnt === 0) {
+                    send_friend_map = true
+                }
             }
 
             this.continue_pass_cnts = 0
@@ -304,11 +308,6 @@ class Game {
                 this.is_start = false
             }
 
-
-            // const is_friend = (out_state == OutState.NO_CARDS) && (this.friend_map[next_player_id] === this.game_state.last_valid_player_id)
-            // 如果回合结束还是自己 或者 朋友牌已出，当一方出完且下个用户是朋友时重置
-            // this.is_start = this.is_start || is_friend
-
             if (this.is_start) {
                 this.last_valid_cards_info = null
                 this.last_valid_player_id = null
@@ -322,7 +321,8 @@ class Game {
                 value_cards: show_value_cards,
                 joker_cards: joker_cards,
                 cards_value: cards_value,
-                rank: rank
+                rank: rank,
+                friend_map: send_friend_map ? this.friend_map : null
             }
         }
     }

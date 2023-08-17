@@ -149,6 +149,7 @@ io.on('connection', (socket) => {
                     for (let i in players_info) {
                         if (i == game_data.curr_player_id) {
                             players_info[i].state = PlayerState.RoundStart
+                            players_info[i].team = 'red'
                         }
                         else {
                             players_info[i].state = PlayerState.GameStart
@@ -198,12 +199,26 @@ io.on('connection', (socket) => {
             let num_cards = game.all_players[socket.player_id].cards.length
             num_cards = num_cards > 5 ? null : num_cards
 
-            players_info[next_player_id].state = PlayerState.RoundStart
+            console.log(result.friend_map)
+            console.log(players_info)
+            if (result.friend_map) {
+                for(let player_id in players_info) {
+                    if (!players_info[player_id].team) {
+                        if (players_info[result.friend_map[player_id]].team) {
+                            players_info[player_id].team = players_info[result.friend_map[player_id]].team
+                        }
+                        else {
+                            players_info[player_id].team = "blue"
+                        }
+                    }
+                }
+            }
+
             players_info[socket.player_id].num_cards = num_cards
             players_info[socket.player_id].num_rounds += 1
 
-            const last_cards_value = players_info[next_player_id].curr_cards_value || 0
-            players_info[next_player_id].total_cards_value += last_cards_value
+            players_info[next_player_id].state = PlayerState.RoundStart
+            players_info[next_player_id].total_cards_value += players_info[next_player_id].curr_cards_value || 0
             players_info[next_player_id].curr_cards_value = 0
             if (players_info[next_player_id].value_cards) {
                 players_info[next_player_id].show_value_cards = [...players_info[next_player_id].value_cards]
@@ -243,7 +258,10 @@ io.on('connection', (socket) => {
             }
             else {
                 // 游戏跳过状态发给所有用户
-                players_info[socket.player_id].state = PlayerState.RoundSkip
+                // 朋友牌帮助触发的时候，如果还是该用户，则该用户不显示跳过
+                if (socket.player_id != next_player_id) {
+                    players_info[socket.player_id].state = PlayerState.RoundSkip
+                }
                 players_info[socket.player_id].valid_cards = []
                 players_info[socket.player_id].cards_value = 0
                 players_info[socket.player_id].rank = null
@@ -252,6 +270,7 @@ io.on('connection', (socket) => {
                     game_info: {
                         curr_player_id: next_player_id,
                         friend_card_cnt: game.friend_card_cnt,
+                        is_friend_help: result.is_friend_help
                     },
                     players_info: players_info
                 })
@@ -264,7 +283,6 @@ io.on('connection', (socket) => {
             })
         }
         else if (result.status == 0) {
-            console.log(game.winners_order)
             for (let i of game.winners_order) {
                 players_info[i].value_score = result.value_scores[i]
                 players_info[i].normal_score = result.normal_scores[i]
