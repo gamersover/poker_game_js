@@ -19,6 +19,7 @@ const GameState = {
     "GameNotStart": 0,
     "GameStart": 1,
     "GameStop": 2,
+    "GameEnd": 3
 }
 
 const NUM_POKERS = 2
@@ -284,7 +285,9 @@ class Game {
             }
         }
         else {
-            let is_friend_help = false
+            let friend_help_info = {
+                is_friend_help: false
+            }
             let next_player_id = (parseInt(curr_player_id) + 1) % NUM_PLAYERS
             while (this.all_players[next_player_id].cards.length == 0) {
                 this.continue_pass_cnts += 1
@@ -298,8 +301,10 @@ class Game {
             if(this.continue_pass_cnts >= NUM_PLAYERS - 1){
                 // 如果出完牌了，都要不起，且没有朋友牌了，则下个玩家为朋友
                 if (this.all_players[this.last_valid_player_id].cards.length == 0 && this.friend_card_cnt == 0) {
-                    is_friend_help = true
                     next_player_id = this.friend_map[this.last_valid_player_id]
+                    friend_help_info.is_friend_help = true
+                    friend_help_info.player =  this.last_valid_player_id
+                    friend_help_info.helped_friend = next_player_id
                 }
                 this.is_start = true
                 this.continue_pass_cnts = 0
@@ -317,7 +322,7 @@ class Game {
                 status: 1,
                 msg: "游戏进行中",
                 next_player_id: next_player_id,
-                is_friend_help: is_friend_help,
+                friend_help_info: friend_help_info,
                 value_cards: show_value_cards,
                 joker_cards: joker_cards,
                 cards_value: cards_value,

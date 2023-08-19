@@ -45,7 +45,6 @@ io.on('connection', (socket) => {
     })
 
     socket.on("join_room", (data) => {
-        // console.log("join_room", socket.id)
         // let sum = 0
         // for(let i = 0; i<10000000000; i++) {
         //     sum += i
@@ -105,10 +104,10 @@ io.on('connection', (socket) => {
                 }
             })
 
-            if (result.curr_player_id == result.player_id) {
+            if (result.game_info.curr_player_id == result.player_id) {
                 socket.emit("game_step", {
                     last_valid_cards_info: result.last_valid_cards_info,
-                    is_start: result.is_start
+                    is_start: result.game_info.is_start
                 })
             }
         }
@@ -119,7 +118,6 @@ io.on('connection', (socket) => {
 
     socket.on("prepare_start", () => {
         let result = prepare_start(socket.room_number, socket.player_name, socket.player_id)
-        // console.log("prepare", socket.id)
         // let sum = 0
         // for(let i = 0; i<10000000000; i++) {
         //     sum += i
@@ -199,8 +197,6 @@ io.on('connection', (socket) => {
             let num_cards = game.all_players[socket.player_id].cards.length
             num_cards = num_cards > 5 ? null : num_cards
 
-            console.log(result.friend_map)
-            console.log(players_info)
             if (result.friend_map) {
                 for(let player_id in players_info) {
                     if (!players_info[player_id].team) {
@@ -251,7 +247,7 @@ io.on('connection', (socket) => {
                     game_info: {
                         curr_player_id: next_player_id,
                         friend_card_cnt: game.friend_card_cnt,
-                        is_friend_help: result.is_friend_help
+                        friend_help_info: result.friend_help_info
                     },
                     players_info: players_info
                 })
@@ -270,19 +266,19 @@ io.on('connection', (socket) => {
                     game_info: {
                         curr_player_id: next_player_id,
                         friend_card_cnt: game.friend_card_cnt,
-                        is_friend_help: result.is_friend_help
+                        friend_help_info: result.friend_help_info
                     },
                     players_info: players_info
                 })
             }
             const next_player = players_info[next_player_id]
-            logger.info(`房间${socket.room_number}： 当前出牌用户${next_player.player_name}`)
             io.to(next_player.socket_id).emit("game_step", {
                 last_valid_cards_info: game.last_valid_cards_info,
                 is_start: game.is_start,
             })
         }
         else if (result.status == 0) {
+            room_data[socket.room_number].state = GameState.GameEnd
             for (let i of game.winners_order) {
                 players_info[i].value_score = result.value_scores[i]
                 players_info[i].normal_score = result.normal_scores[i]

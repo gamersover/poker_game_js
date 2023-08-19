@@ -229,10 +229,9 @@ function prepare_start(room_number, player_name, player_id) {
     else {
         room_data[room_number].players_info[player_id].state = PlayerState.Prepared
         let prepared_cnt = 0
-        // TODO: 是不是游戏状态不是Stop且准备人数为4个，就游戏开始
         for (let player_id in room_data[room_number].players_info) {
-            if (room_data[room_number].players_info[player_id].state >= PlayerState.Prepared &&
-                room_data[room_number].players_info[player_id].is_exited != 1) {
+            if (room_data[room_number].players_info[player_id].state >= PlayerState.Prepared
+                && room_data[room_number].players_info[player_id].state < PlayerState.GameEnd) {
                 prepared_cnt += 1
             }
         }
