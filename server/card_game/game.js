@@ -114,19 +114,19 @@ class Game {
     }
 
     random_split_cards() {
-        // this.pokers = utils.shuffle(this.pokers)
-        // const num_cards_per_player = this.pokers.length / NUM_PLAYERS
-        // for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
-        //     this.all_players.push(
-        //         new Player(this.pokers.slice(i*num_cards_per_player, (i+1)*num_cards_per_player), false)
-        //     )
-        // }
-        // TODO: 测试方便，先不shuffle
+        this.pokers = utils.shuffle(this.pokers)
+        const num_cards_per_player = this.pokers.length / NUM_PLAYERS
         for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
             this.all_players.push(
-                new Player(examples["first"][i], false)
+                new Player(this.pokers.slice(i*num_cards_per_player, (i+1)*num_cards_per_player), false)
             )
         }
+        // TODO: 测试方便，先不shuffle
+        // for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
+        //     this.all_players.push(
+        //         new Player(examples["first"][i], false)
+        //     )
+        // }
     }
 
     get_friend_info() {
