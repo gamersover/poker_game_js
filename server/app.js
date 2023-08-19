@@ -194,6 +194,7 @@ io.on('connection', (socket) => {
         let players_info = room_data[socket.room_number].players_info
         if (result.status === 1) {
             const next_player_id = result.next_player_id
+            logger.info(`房间${socket.room_number}：当前出牌用户${players_info[next_player_id].player_name}`)
             let num_cards = game.all_players[socket.player_id].cards.length
             num_cards = num_cards > 5 ? null : num_cards
 
