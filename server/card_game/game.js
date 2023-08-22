@@ -288,10 +288,10 @@ class Game {
             let friend_help_info = {
                 is_friend_help: false
             }
-            let next_player_id = (parseInt(curr_player_id) + 1) % NUM_PLAYERS
-            while (this.all_players[next_player_id].cards.length == 0) {
+            this.curr_player_id = (parseInt(curr_player_id) + 1) % NUM_PLAYERS
+            while (this.all_players[this.curr_player_id].cards.length == 0) {
                 this.continue_pass_cnts += 1
-                next_player_id = (next_player_id + 1) % NUM_PLAYERS
+                this.curr_player_id = (this.curr_player_id + 1) % NUM_PLAYERS
             }
             /* 当上家出完手牌后的逻辑是这样
                 如果朋友牌都出了，要是其他人要不起的话，下个出牌人是队友而不是下家
@@ -301,10 +301,10 @@ class Game {
             if(this.continue_pass_cnts >= NUM_PLAYERS - 1){
                 // 如果出完牌了，都要不起，且没有朋友牌了，则下个玩家为朋友
                 if (this.all_players[this.last_valid_player_id].cards.length == 0 && this.friend_card_cnt == 0) {
-                    next_player_id = this.friend_map[this.last_valid_player_id]
+                    this.curr_player_id = this.friend_map[this.last_valid_player_id]
                     friend_help_info.is_friend_help = true
                     friend_help_info.player =  this.last_valid_player_id
-                    friend_help_info.helped_friend = next_player_id
+                    friend_help_info.helped_friend = this.curr_player_id
                 }
                 this.is_start = true
                 this.continue_pass_cnts = 0
@@ -321,7 +321,7 @@ class Game {
             return {
                 status: 1,
                 msg: "游戏进行中",
-                next_player_id: next_player_id,
+                next_player_id: this.curr_player_id,
                 friend_help_info: friend_help_info,
                 value_cards: show_value_cards,
                 joker_cards: joker_cards,

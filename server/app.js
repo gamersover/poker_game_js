@@ -181,6 +181,10 @@ io.on('connection', (socket) => {
     })
 
     socket.on("game_step", (data) => {
+        // 判断玩家id对不对得上？
+        if (room_data[socket.room_number].game.curr_player_id != socket.player_id) {
+            return
+        }
         let result = game_step(
             socket.room_number,
             socket.player_id,
