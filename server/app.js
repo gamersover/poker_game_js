@@ -244,7 +244,6 @@ io.on('connection', (socket) => {
                 if (result.value_cards) {
                     players_info[socket.player_id].value_cards.push(result.value_cards)
                 }
-                players_info[socket.player_id].joker_cards = result.joker_cards
                 players_info[socket.player_id].rank = result.rank
 
                 io.to(socket.room_number).emit("game_step_global", {

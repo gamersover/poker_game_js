@@ -227,7 +227,7 @@ class Game {
     }
 
     step(curr_player_id, raw_cards, cards_info, cards_value, all_cards, out_state) {
-        let show_value_cards = null, joker_cards = null
+        let show_value_cards = null
         let send_friend_map = false
         let rank = null
         if (out_state === OutState.VALID) {
@@ -255,12 +255,17 @@ class Game {
             if (cards_value > 0) {
                 // 有赏，就全部返回，包括王
                 show_value_cards = raw_cards
-                joker_cards = raw_cards.filter(card => SPECIAL_CARDS.has(card))
             }
-            else if (raw_cards.some(card => SPECIAL_CARDS.has(card))) {
-                // 无赏，就只返回王
-                show_value_cards = raw_cards.filter(card => SPECIAL_CARDS.has(card))
-                joker_cards = show_value_cards
+            else {
+                // 无赏牌，但是有纯炸弹，也要show，考虑到连炸的情况
+                const without_joker_cards = raw_cards.filter(card => !SPECIAL_CARDS.has(card))
+                if (without_joker_cards.length >= 4 && without_joker_cards.every(card => get_card_name(card) == get_card_name(without_joker_cards[0]))) {
+                    show_value_cards = raw_cards
+                }
+                else if (raw_cards.some(card => SPECIAL_CARDS.has(card))) {
+                    // 无赏，就只返回王
+                    show_value_cards = raw_cards.filter(card => SPECIAL_CARDS.has(card))
+                }
             }
         }
         else if (out_state === OutState.PASS) {
@@ -324,7 +329,6 @@ class Game {
                 next_player_id: this.curr_player_id,
                 friend_help_info: friend_help_info,
                 value_cards: show_value_cards,
-                joker_cards: joker_cards,
                 cards_value: cards_value,
                 rank: rank,
                 friend_map: send_friend_map ? this.friend_map : null
