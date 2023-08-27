@@ -218,13 +218,12 @@ function get_cards_value(raw_cards) {
 
 
 function get_all_zhadan(cards) {
-    // TODO: 忽略王牌
     let zhadans = []
     let left = 0
     let right = 1
     let card = cards[left]
     while (right < cards.length){
-        if (get_card_name(card) == get_card_name(cards[right])) {
+        if (get_card_name(card) == get_card_name(cards[right]) || (SPECIAL_CARDS.has(get_card_name(card)) && SPECIAL_CARDS.has(get_card_name(cards[right])))) {
             right++
         }
         else {

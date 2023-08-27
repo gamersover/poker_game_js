@@ -185,7 +185,7 @@ io.on('connection', (socket) => {
         if (room_data[socket.room_number].game.curr_player_id != socket.player_id) {
             return
         }
-        let result = game_step(
+        const result = game_step(
             socket.room_number,
             socket.player_id,
             data.raw_cards,
@@ -199,8 +199,6 @@ io.on('connection', (socket) => {
         if (result.status === 1) {
             const next_player_id = result.next_player_id
             logger.info(`房间${socket.room_number}：当前出牌用户${players_info[next_player_id].player_name}`)
-            let num_cards = game.all_players[socket.player_id].cards.length
-            num_cards = num_cards > 5 ? null : num_cards
 
             if (result.friend_map) {
                 for(let player_id in players_info) {
@@ -215,17 +213,20 @@ io.on('connection', (socket) => {
                 }
             }
 
-            players_info[socket.player_id].num_cards = num_cards
-            players_info[socket.player_id].num_rounds += 1
-
             players_info[next_player_id].state = PlayerState.RoundStart
-            players_info[next_player_id].total_cards_value += players_info[next_player_id].curr_cards_value || 0
-            players_info[next_player_id].curr_cards_value = 0
             if (players_info[next_player_id].value_cards) {
                 players_info[next_player_id].show_value_cards = [...players_info[next_player_id].value_cards]
             }
             else {
                 players_info[next_player_id].show_value_cards = []
+            }
+
+            let num_cards = game.all_players[socket.player_id].cards.length
+            num_cards = num_cards > 5 ? null : num_cards
+            players_info[socket.player_id].num_cards = num_cards
+            players_info[socket.player_id].num_rounds += 1
+            if (result.final_value_cards) {
+                players_info[socket.player_id].show_value_cards = result.final_value_cards
             }
 
             if (data.out_state === OutState.VALID) {
@@ -236,7 +237,6 @@ io.on('connection', (socket) => {
                 if (typeof(players_info[socket.player_id].total_cards_value) === 'undefined') {
                     players_info[socket.player_id].total_cards_value = 0
                 }
-                players_info[socket.player_id].curr_cards_value = result.cards_value
 
                 if (!players_info[socket.player_id].value_cards) {
                     players_info[socket.player_id].value_cards = []
@@ -291,6 +291,7 @@ io.on('connection', (socket) => {
                 players_info[i].state = PlayerState.GameEnd
                 players_info[i].num_cards = game.all_players[i].cards.length
                 players_info[i].valid_cards = game.all_players[i].cards
+                players_info[i].show_value_cards = result.all_players_final_value_cards[i]
             }
             io.to(socket.room_number).emit("game_step_global", {
                 status: 3,

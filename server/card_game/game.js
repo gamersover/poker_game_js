@@ -28,51 +28,83 @@ const NUM_PLAYERS = 4
 
 class ValueCalculator {
     constructor(init_cards) {
-        this.value = 0;
-        this.all_value_cards = []
-        this.normal_value_cards = [];
+        this.value = 0
+        this.normal_zhadans = []
+        this.normal_zhadans_value = []
+        this.valued_jokers = []
+        this.valued_jokers_value = 0
 
-        const special_cards = [];
+        const joker_cards = []
         for (const card of init_cards) {
             if (SPECIAL_CARDS.has(card)) {
-                special_cards.push(card);
+                joker_cards.push(card)
             }
         }
+        console.log(joker_cards)
 
-        if ((special_cards.length == 2) && (special_cards[0] == special_cards[1])) {
-            this.value += 1;
-            Array.prototype.push.apply(this.all_value_cards, special_cards)
+        // 四个王不能拆，拆了就没有赏了
+        if ((joker_cards.length == 2) && (joker_cards[0] == joker_cards[1])) {
+            this.valued_jokers = joker_cards
+            this.valued_jokers_value = 1
         }
-        else if (special_cards.length == 3) {
-            Array.prototype.push.apply(this.all_value_cards, special_cards)
-            this.value += 2
+        else if (joker_cards.length == 3) {
+            this.valued_jokers = joker_cards
+            this.valued_jokers_value = 2
         }
     }
 
     update(raw_cards, cards_value) {
+        // raw_cards是包含joker的，cards_value是四个王或者纯炸弹的赏值
+        // TODO: 四个王如果同时替换为一张牌，那怎么算？
+        const normal_cards = raw_cards.filter(card => SPECIAL_CARDS.has(card))
         if (cards_value > 0) {
-            this.all_value_cards.push(raw_cards)
-            this.value += cards_value;
-            if (!SPECIAL_CARDS.has(get_card_name(raw_cards[0]))) {
-                this.normal_value_cards.push(raw_cards);
+            if (raw_cards.every(card => SPECIAL_CARDS.has(card))) {
+                this.valued_jokers = raw_cards
+                this.valued_jokers_value = cards_value
             }
+            else {
+                this.normal_zhadans.push(raw_cards.filter(card => !SPECIAL_CARDS.has(card)))
+                this.normal_zhadans_value.push(cards_value)
+           }
+        }
+        else if (normal_cards.length >= 4 && normal_cards.every(card => get_card_name(card) === get_card_name(normal_cards[0]))) {
+            this.normal_zhadans.push(normal_cards)
+            this.normal_zhadans_value.push(cards_value)
         }
     }
 
     calc(cards) {
-        // TODO: 连炸2222 3333算吗？
-        let zhadans = get_all_zhadan(cards)
+        const zhadans = get_all_zhadan(cards)
         for (let zhadan of zhadans) {
             this.update(zhadan, get_cards_value(zhadan))
         }
+        console.log(this.valued_jokers)
+        console.log(this.normal_zhadans)
 
-        const sorted_value_cards = this.normal_value_cards.sort((a, b) => get_card_rank(a[0]) - get_card_rank(b[0]));
-        for (let i = 1; i < sorted_value_cards.length; i++) {
-            if (get_card_rank(sorted_value_cards[i - 1][0]) === get_card_rank(sorted_value_cards[i][0]) - 1) {
-                this.value += 1;
+        this.value += this.valued_jokers_value
+        this.real_value_cards = this.valued_jokers.length > 0 ? [this.valued_jokers] : []
+
+        const sorted_value_cards = this.normal_zhadans.sort((a, b) => get_card_rank(a[0]) - get_card_rank(b[0]));
+        for (let i = 0; i < sorted_value_cards.length; i++) {
+            let is_value_cards = false
+
+            if (this.normal_zhadans_value[i] > 0) {
+                is_value_cards = true
+                this.value += this.normal_zhadans_value[i]
+            }
+            else if (i === sorted_value_cards.length -1 && get_card_rank(sorted_value_cards[i-1][0]) === get_card_rank(sorted_value_cards[i][0]) - 1) {
+                is_value_cards = true
+            }
+
+            if (i < sorted_value_cards.length - 1 && get_card_rank(sorted_value_cards[i][0]) === get_card_rank(sorted_value_cards[i+1][0]) - 1) {
+                this.value += 1
+                is_value_cards = true
+            }
+
+            if (is_value_cards) {
+                this.real_value_cards.push(sorted_value_cards[i])
             }
         }
-        return this.value
     }
 }
 
@@ -114,19 +146,20 @@ class Game {
     }
 
     random_split_cards() {
-        this.pokers = utils.shuffle(this.pokers)
-        const num_cards_per_player = this.pokers.length / NUM_PLAYERS
-        for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
-            this.all_players.push(
-                new Player(this.pokers.slice(i*num_cards_per_player, (i+1)*num_cards_per_player), false)
-            )
-        }
-        // TODO: 测试方便，先不shuffle
+        // this.pokers = utils.shuffle(this.pokers)
+        // const num_cards_per_player = this.pokers.length / NUM_PLAYERS
         // for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
         //     this.all_players.push(
-        //         new Player(examples["first"][i], false)
+        //         new Player(this.pokers.slice(i*num_cards_per_player, (i+1)*num_cards_per_player), false)
         //     )
         // }
+
+        // TODO: 测试方便，先不shuffle
+        for (let i = NUM_PLAYERS - 1; i >= 0; i--) {
+            this.all_players.push(
+                new Player(examples["first"][i], false)
+            )
+        }
     }
 
     get_friend_info() {
@@ -202,10 +235,14 @@ class Game {
         // value_scores是赏，normal_scores涉及关双还是关单
         let value_scores = Array(NUM_PLAYERS).fill(0)
         let total_value = 0
+        const final_value_cards = {}
         for (let i = 0; i < NUM_PLAYERS; i++) {
-            let value = this.player_value_calculator[i].calc(this.all_players[i].cards)
-            total_value += value
-            value_scores[i] = value
+            if (this.all_players[i].cards.length > 0) {
+                this.player_value_calculator[i].calc(this.all_players[i].cards)
+            }
+            total_value += this.player_value_calculator[i].value
+            value_scores[i] = this.player_value_calculator[i].value
+            final_value_cards[i] = this.player_value_calculator[i].real_value_cards
         }
 
         let normal_scores = this.get_score_without_value()
@@ -213,11 +250,11 @@ class Game {
             this.players_score[i] = value_scores[i] * (NUM_PLAYERS - 1) - (total_value - value_scores[i]) + normal_scores[i]
             this.global_players_score[i] += this.players_score[i]
         }
-        return {value_scores, normal_scores}
+        return {value_scores, normal_scores, final_value_cards}
     }
 
     is_over(){
-        if (this.winners_order.length == NUM_PLAYERS - 1) {
+        if (this.winners_order.length === 3) {
             return true
         }
         else if (this.winners_order.length == 2) {
@@ -230,6 +267,7 @@ class Game {
         let show_value_cards = null
         let send_friend_map = false
         let rank = null
+        let final_value_cards = null
         if (out_state === OutState.VALID) {
             this.all_players[curr_player_id].cards = all_cards
             this.last_valid_cards_info = cards_info
@@ -250,6 +288,8 @@ class Game {
             if (all_cards.length === 0) {
                 // 当前玩家没有手牌了
                 this.winners_order.push(curr_player_id)
+                this.player_value_calculator[curr_player_id].calc([])
+                final_value_cards = this.player_value_calculator[curr_player_id].real_value_cards
                 rank = this.winners_order.length
             }
             if (cards_value > 0) {
@@ -278,15 +318,13 @@ class Game {
                     this.winners_order.push(i)
                 }
             }
-            let {value_scores, normal_scores} = this.get_final_value()
+            let {value_scores, normal_scores, final_value_cards: all_players_final_value_cards} = this.get_final_value()
             return {
                 status: 0,
                 msg: "游戏结束",
                 normal_scores: normal_scores,
                 value_scores: value_scores,
-                value_cards: show_value_cards,
-                cards_value: cards_value,
-                rank: rank
+                all_players_final_value_cards: all_players_final_value_cards
             }
         }
         else {
@@ -331,6 +369,7 @@ class Game {
                 value_cards: show_value_cards,
                 cards_value: cards_value,
                 rank: rank,
+                final_value_cards: final_value_cards,
                 friend_map: send_friend_map ? this.friend_map : null
             }
         }
