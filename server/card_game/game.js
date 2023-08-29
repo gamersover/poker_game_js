@@ -40,7 +40,6 @@ class ValueCalculator {
                 joker_cards.push(card)
             }
         }
-        console.log(joker_cards)
 
         // 四个王不能拆，拆了就没有赏了
         if ((joker_cards.length == 2) && (joker_cards[0] == joker_cards[1])) {
@@ -78,8 +77,6 @@ class ValueCalculator {
         for (let zhadan of zhadans) {
             this.update(zhadan, get_cards_value(zhadan))
         }
-        console.log(this.valued_jokers)
-        console.log(this.normal_zhadans)
 
         this.value += this.valued_jokers_value
         this.real_value_cards = this.valued_jokers.length > 0 ? [this.valued_jokers] : []

@@ -50,12 +50,12 @@ function create_room(room_number, player_name, player_avatar, socket_id) {
 
 function handle_join_room(player_name, player_avatar, player_id, socket_id, all_players_name, players_info, room_number){
     // TODO: join_room和join_room_second可以写成一个函数吗
-    let n = 1
-    let new_player_name = player_name
-    while (all_players_name.includes(new_player_name)){
-        new_player_name = player_name + n
-        n++
-    }
+    // let n = 1
+    // let new_player_name = player_name
+    // while (all_players_name.includes(new_player_name)){
+    //     new_player_name = player_name + n
+    //     n++
+    // }
 
     if (player_id == null) {
         player_id = 0
@@ -63,26 +63,26 @@ function handle_join_room(player_name, player_avatar, player_id, socket_id, all_
             if (!players_info[player_id]){
                 players_info[player_id] = {
                     state: PlayerState.InGame,
-                    player_name: new_player_name,
+                    player_name: player_name,
                     player_avatar: player_avatar,
                     socket_id: socket_id,
                 }
-                all_players_name.push(new_player_name)
+                all_players_name.push(player_name)
                 break
             }
         }
     }
     else {
         all_players_name.splice(all_players_name.indexOf(players_info[player_id].player_name), 1)
-        all_players_name.push(new_player_name)
+        all_players_name.push(player_name)
         room_data[room_number].players_info[player_id] = {
             ...players_info[player_id],
-            player_name: new_player_name,
+            player_name: player_name,
             player_avatar: player_avatar,
             socket_id: socket_id,
         }
     }
-    return {new_player_name, player_id}
+    return {player_name, player_id}
 }
 
 
@@ -140,7 +140,8 @@ function join_room(room_number, player_name, player_avatar, socket_id){
         game_info: {
             room_number: room_number,
             host_id: room_data[room_number].room_host_id,
-            state: room_data[room_number].state
+            state: room_data[room_number].state,
+            messages: room_data[room_number].messages || []
         },
         player_id: new_player_id,
         players_info: players_info
@@ -197,7 +198,8 @@ function join_room_second(room_number, player_id, player_name, player_avatar, so
                 friend_card_cnt: game.friend_card_cnt,
                 is_start: game.is_start,
                 num_games: game.num_games,
-                winners_order: game.winners_order
+                winners_order: game.winners_order,
+                messages: room_data[room_number].messages || []
             },
             player_id: new_player_id,
             all_cards: game.all_players[new_player_id].cards,

@@ -95,7 +95,8 @@ io.on('connection', (socket) => {
                     friend_card_cnt: result.game_info.friend_card_cnt,
                     num_games: result.game_info.num_games,
                     room_number: result.game_info.room_number,
-                    winners_order: result.game_info.winners_order
+                    winners_order: result.game_info.winners_order,
+                    messages: result.game_info.messages
                 },
                 players_info: result.players_info,
                 user_info: {
@@ -302,6 +303,17 @@ io.on('connection', (socket) => {
                 players_info
             })
         }
+    })
+
+    socket.on("send_message", (data) => {
+        const this_room_data = room_data[socket.room_number]
+        if (this_room_data.messages) {
+            this_room_data.messages.push(data)
+        }
+        else {
+            this_room_data.messages = [data]
+        }
+        io.to(socket.room_number).emit("send_message_global", data)
     })
 
     socket.on("next_round", () => {
