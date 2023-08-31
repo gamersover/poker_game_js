@@ -325,6 +325,10 @@ io.on('connection', (socket) => {
     socket.on("next_round", () => {
         let this_room_data = room_data[socket.room_number]
         let players_info = this_room_data.players_info
+
+        // 清空该玩家手牌
+        this_room_data.game.all_players[socket.player_id].cards = []
+
         const { player_name, socket_id, global_score, player_avatar } = players_info[socket.player_id]
         players_info[socket.player_id] = {
             state: PlayerState.InGame,
@@ -384,7 +388,8 @@ io.on('connection', (socket) => {
                     players_info: players_info,
                     game_info: {
                         state: this_room_data.state,
-                        host_id: this_room_data.room_host_id
+                        host_id: this_room_data.room_host_id,
+                        exited_player_id: socket.player_id
                     }
                 })
             }
