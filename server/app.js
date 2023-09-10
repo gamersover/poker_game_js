@@ -355,41 +355,42 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on("disconnect", (data) => {
+
+    function handlePlayerDisconnect(room_number, player_name, player_id) {
         // 如果游戏进行中，保留用户信息，等待用户重连
-        if (socket.room_number && room_data[socket.room_number]) {
-            let this_room_data = room_data[socket.room_number]
-            logger.info(`房间${socket.room_number}的用户${socket.player_name}已退出`)
+        if (room_number && room_data[room_number]) {
+            let this_room_data = room_data[room_number]
+            logger.info(`房间${room_number}的用户${player_name}已退出`)
             let players_info = this_room_data.players_info
 
-            socket.leave(socket.room_number)
+            socket.leave(room_number)
             if (this_room_data.game) {
                 // 游戏启动了
-                players_info[socket.player_id].is_exited = 1
+                players_info[player_id].is_exited = 1
                 this_room_data.state = GameState.GameStop
             }
             else {
                 // 游戏未启动
-                delete players_info[socket.player_id]
-                this_room_data.all_players_name.splice(this_room_data.all_players_name.indexOf(socket.player_name), 1)
+                delete players_info[player_id]
+                this_room_data.all_players_name.splice(this_room_data.all_players_name.indexOf(player_name), 1)
             }
 
             // 找出所有未退出的用户
             let all_not_exited_players = []
-            for (let player_id in players_info) {
-                if (players_info[player_id].is_exited != 1) {
-                    all_not_exited_players.push(player_id)
+            for (let id in players_info) {
+                if (players_info[id].is_exited != 1) {
+                    all_not_exited_players.push(id)
                 }
             }
 
             if (all_not_exited_players.length > 0) {
-                io.to(socket.room_number).emit("player_exit", {
+                io.to(room_number).emit("player_exit", {
                     status: 1,
                     players_info: players_info,
                     game_info: {
                         state: this_room_data.state,
                         host_id: this_room_data.room_host_id,
-                        exited_player_id: socket.player_id
+                        exited_player_id: player_id
                     }
                 })
             }
@@ -397,6 +398,14 @@ io.on('connection', (socket) => {
                 delete room_data[socket.room_number]
             }
         }
+    }
+
+    socket.on("exit", () => {
+        handlePlayerDisconnect(socket.room_number, socket.player_name, socket.player_id)
+    })
+
+    socket.on("disconnect", () => {
+        handlePlayerDisconnect(socket.room_number, socket.player_name, socket.player_id)
     })
 
 });
