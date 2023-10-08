@@ -55,14 +55,14 @@ class ValueCalculator {
     update(raw_cards, cards_value) {
         // raw_cards是包含joker的，cards_value是四个王或者纯炸弹的赏值
         // TODO: 四个王如果同时替换为一张牌，那怎么算？
-        const normal_cards = raw_cards.filter(card => SPECIAL_CARDS.has(card))
+        const normal_cards = raw_cards.filter(card => !SPECIAL_CARDS.has(card))
         if (cards_value > 0) {
             if (raw_cards.every(card => SPECIAL_CARDS.has(card))) {
                 this.valued_jokers = raw_cards
                 this.valued_jokers_value = cards_value
             }
             else {
-                this.normal_zhadans.push(raw_cards.filter(card => !SPECIAL_CARDS.has(card)))
+                this.normal_zhadans.push(normal_cards)
                 this.normal_zhadans_value.push(cards_value)
            }
         }
@@ -73,6 +73,14 @@ class ValueCalculator {
     }
 
     calc(cards) {
+        /**
+         * joker单独算赏值
+         * 4个头以上的炸弹的个数超过3个开始才有赏值
+         * 5个头以上的炸弹的个数超过2个就有赏值
+         * 6个头以上的炸弹本身就有赏值
+         * 连炸有赏值
+         * ? 那 6个3,6个5,6个7，怎么算赏值？
+         */
         const zhadans = get_all_zhadan(cards)
         for (let zhadan of zhadans) {
             this.update(zhadan, get_cards_value(zhadan))
@@ -82,14 +90,21 @@ class ValueCalculator {
         this.real_value_cards = this.valued_jokers.length > 0 ? [this.valued_jokers] : []
 
         const sorted_value_cards = this.normal_zhadans.sort((a, b) => get_card_rank(a[0]) - get_card_rank(b[0]));
+
+        const zhadan_has_value = Array(sorted_value_cards.length).fill(false)
+        // 记录五张以上相同牌构成的炸弹
+        const five_cnt_zhandans_index = []
         for (let i = 0; i < sorted_value_cards.length; i++) {
             let is_value_cards = false
+            if (sorted_value_cards[i].length >= 5) {
+                five_cnt_zhandans_index.push(i)
+            }
 
             if (this.normal_zhadans_value[i] > 0) {
                 is_value_cards = true
                 this.value += this.normal_zhadans_value[i]
             }
-            else if (i === sorted_value_cards.length -1 && get_card_rank(sorted_value_cards[i-1][0]) === get_card_rank(sorted_value_cards[i][0]) - 1) {
+            else if (i > 0 && i === sorted_value_cards.length - 1 && get_card_rank(sorted_value_cards[i-1][0]) === get_card_rank(sorted_value_cards[i][0]) - 1) {
                 is_value_cards = true
             }
 
@@ -99,9 +114,26 @@ class ValueCalculator {
             }
 
             if (is_value_cards) {
-                this.real_value_cards.push(sorted_value_cards[i])
+                zhadan_has_value[i] = true
             }
         }
+
+        const normal_zhadan_cnts = sorted_value_cards.length
+        if (normal_zhadan_cnts >= 3) {
+            this.value += normal_zhadan_cnts - 2
+            this.real_value_cards = sorted_value_cards
+        }
+        else if (five_cnt_zhandans_index.length >= 2) {
+            this.value += 1
+            five_cnt_zhandans_index.forEach(index => {
+                zhadan_has_value[index] = true
+            })
+        }
+        zhadan_has_value.forEach((v, i) => {
+            if (v) {
+                this.real_value_cards.push(sorted_value_cards[i])
+            }
+        })
     }
 }
 
