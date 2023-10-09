@@ -30,7 +30,6 @@ class ValueCalculator {
     constructor(init_cards) {
         this.value = 0
         this.normal_zhadans = []
-        this.normal_zhadans_value = []
         this.valued_jokers = []
         this.valued_jokers_value = 0
 
@@ -62,13 +61,17 @@ class ValueCalculator {
                 this.valued_jokers_value = cards_value
             }
             else {
-                this.normal_zhadans.push(normal_cards)
-                this.normal_zhadans_value.push(cards_value)
+                this.normal_zhadans.push({
+                    cards: normal_cards,
+                    value: cards_value
+                })
            }
         }
         else if (normal_cards.length >= 4 && normal_cards.every(card => get_card_name(card) === get_card_name(normal_cards[0]))) {
-            this.normal_zhadans.push(normal_cards)
-            this.normal_zhadans_value.push(cards_value)
+            this.normal_zhadans.push({
+                cards: normal_cards,
+                value: cards_value
+            })
         }
     }
 
@@ -89,7 +92,7 @@ class ValueCalculator {
         this.value += this.valued_jokers_value
         this.real_value_cards = this.valued_jokers.length > 0 ? [this.valued_jokers] : []
 
-        const sorted_value_cards = this.normal_zhadans.sort((a, b) => get_card_rank(a[0]) - get_card_rank(b[0]));
+        const sorted_value_cards = this.normal_zhadans.sort((a, b) => get_card_rank(a.cards[0]) - get_card_rank(b.cards[0]));
 
         const zhadan_has_value = Array(sorted_value_cards.length).fill(false)
         // 记录五张以上相同牌构成的炸弹
@@ -100,15 +103,15 @@ class ValueCalculator {
                 five_cnt_zhandans_index.push(i)
             }
 
-            if (this.normal_zhadans_value[i] > 0) {
+            if (sorted_value_cards[i].value > 0) {
                 is_value_cards = true
-                this.value += this.normal_zhadans_value[i]
+                this.value += sorted_value_cards[i].value
             }
-            else if (i > 0 && i === sorted_value_cards.length - 1 && get_card_rank(sorted_value_cards[i-1][0]) === get_card_rank(sorted_value_cards[i][0]) - 1) {
+            else if (i > 0 && i === sorted_value_cards.length - 1 && get_card_rank(sorted_value_cards[i-1].cards[0]) === get_card_rank(sorted_value_cards[i].cards[0]) - 1) {
                 is_value_cards = true
             }
 
-            if (i < sorted_value_cards.length - 1 && get_card_rank(sorted_value_cards[i][0]) === get_card_rank(sorted_value_cards[i+1][0]) - 1) {
+            if (i < sorted_value_cards.length - 1 && get_card_rank(sorted_value_cards[i].cards[0]) === get_card_rank(sorted_value_cards[i+1].cards[0]) - 1) {
                 this.value += 1
                 is_value_cards = true
             }
@@ -121,19 +124,21 @@ class ValueCalculator {
         const normal_zhadan_cnts = sorted_value_cards.length
         if (normal_zhadan_cnts >= 3) {
             this.value += normal_zhadan_cnts - 2
-            this.real_value_cards = sorted_value_cards
+            this.real_value_cards = sorted_value_cards.map(card => card.cards)
         }
-        else if (five_cnt_zhandans_index.length >= 2) {
-            this.value += 1
-            five_cnt_zhandans_index.forEach(index => {
-                zhadan_has_value[index] = true
+        else {
+            if (five_cnt_zhandans_index.length >= 2) {
+                this.value += 1
+                five_cnt_zhandans_index.forEach(index => {
+                    zhadan_has_value[index] = true
+                })
+            }
+            zhadan_has_value.forEach((v, i) => {
+                if (v) {
+                    this.real_value_cards.push(sorted_value_cards[i].cards)
+                }
             })
         }
-        zhadan_has_value.forEach((v, i) => {
-            if (v) {
-                this.real_value_cards.push(sorted_value_cards[i])
-            }
-        })
     }
 }
 
